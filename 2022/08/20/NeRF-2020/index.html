@@ -27,7 +27,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://thj2333.github.io/img/19.jpg">
 <meta property="article:published_time" content="2022-08-20T08:56:18.250Z">
-<meta property="article:modified_time" content="2022-08-20T09:50:07.806Z">
+<meta property="article:modified_time" content="2022-08-20T09:54:50.935Z">
 <meta property="article:author" content="thj2333">
 <meta property="article:tag" content="NeRF">
 <meta property="article:tag" content="survey">
@@ -336,8 +336,9 @@
 <p><strong>NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis</strong>, <em>ECCV 2020</em></p>
 <p>NeRF 能够进行非常详细的渲染的原因之一是因为它使用周期性激活函数（即<a target="_blank" rel="noopener" href="https://people.eecs.berkeley.edu/~bmild/fourfeat/">傅立叶特征</a>）对射线上的 3D 点和关联的视图方向进行编码。这一创新后来被推广到具有周期性激活的多层网络，即<a target="_blank" rel="noopener" href="https://vsitzmann.github.io/siren/">SIREN</a>（正弦表示网络）。两者均随后在 NeurIPS 2020 上发布。</p>
 <p>虽然 NeRF 论文表面上发表在 ECCV 2020 上，但在 8 月底，它首次出现在 3 月中旬的 Arxiv上，引发了<a target="_blank" rel="noopener" href="https://twitter.com/ak92501/status/1240802419476508673?s=20">twitter</a>上的兴趣爆炸式增长。我对<a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=JuH79E8rdKc">视频</a>中合成视图的质量感到惊讶，对可视化深度图中难以置信的细节更是如此，例如下面的一些视频展示：</p>
-<div style="position: relative; width: 100%; height: 0; padding-bottom: 75%;"><iframe src="https://www.youtube.com/watch?v=JuH79E8rdKc" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="position: absolute; width: 100%; 
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 75%;"><iframe src="https://www.matthewtancik.com/nerf" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="position: absolute; width: 100%; 
 height: 100%; left: 0; top: 0;"> </iframe></div>
+
 
 <p>更多细节请查看项目网站：<a target="_blank" rel="noopener" href="https://www.matthewtancik.com/nerf">https://www.matthewtancik.com/nerf</a></p>
 <p>可以说，NeRF 论文的影响在于其简单性：只是一个 MLP 接受 5D 坐标并输出密度和颜色。尽管有一些花里胡哨的东西，特别是位置编码和分层采样方案，但许多研究人员还是对这样一个简单的架构可以产生如此令人印象深刻的结果感到震惊。话虽如此，vanilla NeRF 留下了许多改进的机会：</p>
@@ -386,7 +387,7 @@ height: 100%; left: 0; top: 0;"> </iframe></div>
 <p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2011.10379">Neural Scene Graphs</a>在场景图中支持多个以对象为中心的 NeRF 模型。</p>
 <p><a target="_blank" rel="noopener" href="https://wentaoyuan.github.io/star/">STaR</a>类似于 Neural Scene Graphs 论文，仅限于单个对象，但在训练时不需要姿势监督。</p>
 <p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2011.12100">GIRAFFE</a>通过让以对象为中心的 NeRF 模型输出特征向量而不是颜色来支持组合，然后通过平均来组合，并以低分辨率渲染到 2D 特征图，然后在 2D 中上采样。</p>
-<center class="half">    <img src="/2022/08/20/NeRF-2020/thjHOME\暑假科研训练基础\note_img\nerf\OSF.gif" srcset="/img/loading.gif" lazyload width="300">    <img src="/2022/08/20/NeRF-2020/OSF2.gif" srcset="/img/loading.gif" lazyload width="300"> <br>    <div style="color:orange; border-bottom: 1px solid #d9d9d9;    display: inline-block;    color: #999;    padding: 2px;">      对象散射函数 (OSF)，支持组合具有任意对象位置（左）和光照（右）的场景。      </div> </center>
+<center class="half">    <img src="/2022/08/20/NeRF-2020/OSF.gif" srcset="/img/loading.gif" lazyload width="300">    <img src="/2022/08/20/NeRF-2020/OSF2.gif" srcset="/img/loading.gif" lazyload width="300"> <br>    <div style="color:orange; border-bottom: 1px solid #d9d9d9;    display: inline-block;    color: #999;    padding: 2px;">      对象散射函数 (OSF)，支持组合具有任意对象位置（左）和光照（右）的场景。      </div> </center>
 
 <p><a target="_blank" rel="noopener" href="https://shellguo.com/osf/">以对象为中心的神经场景渲染</a>在以对象为中心的坐标系中学习“对象散射函数”，允许使用蒙特卡洛渲染来组合场景并真实地照亮它们。</p>
 <h2 id="Pose-Estimation"><a href="#Pose-Estimation" class="headerlink" title="Pose Estimation"></a>Pose Estimation</h2><p>最后，这篇论文在物体姿态估计的上下文中使用了 NeRF 渲染。</p>
