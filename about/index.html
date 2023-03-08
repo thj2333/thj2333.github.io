@@ -18,12 +18,12 @@
   <meta name="author" content="thj2333">
   <meta name="keywords" content="">
   
-    <meta name="description" content="关于我：  HITSZer-cs在读 this is main time">
+    <meta name="description" content="关于我：  HITSZer-cs在读 this is main time">
 <meta property="og:type" content="website">
 <meta property="og:title" content="关于">
 <meta property="og:url" content="https://thj2333.github.io/about/index.html">
 <meta property="og:site_name" content="thjEarth-616">
-<meta property="og:description" content="关于我：  HITSZer-cs在读 this is main time">
+<meta property="og:description" content="关于我：  HITSZer-cs在读 this is main time">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-06-27T04:00:53.080Z">
 <meta property="article:modified_time" content="2022-06-27T04:00:53.080Z">
@@ -314,6 +314,12 @@
   
 
 
+  
+  
+
+
+
+
 
 
 
@@ -453,6 +459,40 @@
 
 
   <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
 
   <script  src="/js/local-search.js" ></script>
 

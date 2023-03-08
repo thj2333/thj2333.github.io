@@ -18,29 +18,28 @@
   <meta name="author" content="thj2333">
   <meta name="keywords" content="">
   
-    <meta name="description" content="3D分割【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields 训练的时候把color改成了球谐函数（Spherical Harmonics），名">
+    <meta name="description" content="3D分割 【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes 【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields  image-20230216174547465  训练的时候把c">
 <meta property="og:type" content="article">
-<meta property="og:title" content="thjEarth-616">
+<meta property="og:title" content="3D segmentation">
 <meta property="og:url" content="https://thj2333.github.io/2023/03/08/3d_segmentation/index.html">
 <meta property="og:site_name" content="thjEarth-616">
-<meta property="og:description" content="3D分割【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields 训练的时候把color改成了球谐函数（Spherical Harmonics），名">
+<meta property="og:description" content="3D分割 【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes 【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields  image-20230216174547465  训练的时候把c">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230216174547465.png">
-<meta property="og:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230204105243269.png">
-<meta property="og:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230204105529001.png">
-<meta property="og:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230204110532603.png">
-<meta property="og:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230204110626391.png">
+<meta property="og:image" content="https://thj2333.github.io/img/29.jpg">
 <meta property="article:published_time" content="2023-03-08T14:17:16.928Z">
-<meta property="article:modified_time" content="2023-02-19T14:50:44.603Z">
+<meta property="article:modified_time" content="2023-03-08T15:09:47.241Z">
 <meta property="article:author" content="thj2333">
+<meta property="article:tag" content="NeRF">
+<meta property="article:tag" content="CV">
+<meta property="article:tag" content="3D分割">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://thj2333.github.io/2023/03/08/3d_segmentation/thjHOME/Starpic/nerf/img_3d_segmentation/image-20230216174547465.png">
+<meta name="twitter:image" content="https://thj2333.github.io/img/29.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>thjEarth-616</title>
+  <title>3D segmentation - thjEarth-616</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,13 +198,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+     style="background: url('/img/29.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text=""></span>
+            <span id="subtitle" data-typed-text="3D segmentation"></span>
           
         </div>
 
@@ -228,7 +227,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          2.2k 字
         
       </span>
     
@@ -239,7 +238,7 @@
         
         
         
-          18 分钟
+          19 分钟
         
       </span>
     
@@ -285,12 +284,12 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none"></h1>
+            <h1 style="display: none">3D segmentation</h1>
             
               <p class="note note-info">
                 
                   
-                    本文最后更新于：17 天前
+                    本文最后更新于：5 分钟前
                   
                 
               </p>
@@ -298,46 +297,60 @@
             
               <div class="markdown-body">
                 
-                <h1 id="3D分割"><a href="#3D分割" class="headerlink" title="3D分割"></a>3D分割</h1><h2 id="【论文解读】NeSF-Neural-Semantic-Fields-for-Generalizable-Semantic-Segmentation-of-3D-Scenes"><a href="#【论文解读】NeSF-Neural-Semantic-Fields-for-Generalizable-Semantic-Segmentation-of-3D-Scenes" class="headerlink" title="【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes"></a>【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes</h2><h2 id="【论文解读】PlenOctrees-for-Real-time-Rendering-of-Neural-Radiance-Fields"><a href="#【论文解读】PlenOctrees-for-Real-time-Rendering-of-Neural-Radiance-Fields" class="headerlink" title="【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields"></a>【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields</h2><p><img src="/2023/03/08/3d_segmentation/thjHOME\Starpic\nerf\img_3d_segmentation\image-20230216174547465.png" srcset="/img/loading.gif" lazyload alt="image-20230216174547465"></p>
+                <h1 id="d分割">3D分割</h1>
+<h2 id="论文解读nesf-neural-semantic-fields-for-generalizable-semantic-segmentation-of-3d-scenes">【论文解读】NeSF: Neural Semantic Fields for Generalizable Semantic Segmentation of 3D Scenes</h2>
+<h2 id="论文解读plenoctrees-for-real-time-rendering-of-neural-radiance-fields">【论文解读】PlenOctrees for Real-time Rendering of Neural Radiance Fields</h2>
+<figure>
+<img src="/2023/03/08/3d_segmentation/image-20230216174547465.png" srcset="/img/loading.gif" lazyload alt="image-20230216174547465"><figcaption aria-hidden="true">image-20230216174547465</figcaption>
+</figure>
 <p>训练的时候把color改成了球谐函数（Spherical Harmonics），名为nerf-SH，然后将其转化为八叉树表示。</p>
-<h2 id="【论文复现】Neural-Volumetric-Object-Selection"><a href="#【论文复现】Neural-Volumetric-Object-Selection" class="headerlink" title="【论文复现】Neural Volumetric Object Selection"></a>【论文复现】Neural Volumetric Object Selection</h2><p>先来看一下什么式交互是分割：</p>
-<p><img src="/2023/03/08/3d_segmentation/thjHOME\Starpic\nerf\img_3d_segmentation\image-20230204105243269.png" srcset="/img/loading.gif" lazyload alt="image-20230204105243269"></p>
+<h2 id="论文复现neural-volumetric-object-selection">【论文复现】Neural Volumetric Object Selection</h2>
+<p>先来看一下什么式交互是分割：</p>
+<figure>
+<img src="/2023/03/08/3d_segmentation/image-20230204105243269.png" srcset="/img/loading.gif" lazyload alt="image-20230204105243269"><figcaption aria-hidden="true">image-20230204105243269</figcaption>
+</figure>
 <p>模型整体框架：</p>
-<p><img src="/2023/03/08/3d_segmentation/thjHOME\Starpic\nerf\img_3d_segmentation\image-20230204105529001.png" srcset="/img/loading.gif" lazyload alt="image-20230204105529001"></p>
+<figure>
+<img src="/2023/03/08/3d_segmentation/image-20230204105529001.png" srcset="/img/loading.gif" lazyload alt="image-20230204105529001"><figcaption aria-hidden="true">image-20230204105529001</figcaption>
+</figure>
 <p>对于 3D 体积中的每个体素，我们首先计算体素特征embedding（左）。然后，我们训练一个 3D 分割网络，将每个体素分类为前景或背景，使用部分用户涂鸦（中）作为监督。我们应用学习到的分类器，并使用涂鸦的 3D 距离场的 3D 图形切割进一步细化结果（右）。</p>
 <p>每个阶段的实现细节见附录，笔者对其进行整理以便复现，各阶段具体步骤如下：</p>
-<h3 id="voxel-feature-embedding"><a href="#voxel-feature-embedding" class="headerlink" title="voxel feature embedding"></a>voxel feature embedding</h3><p>计算三个特征（MVS、IBR、XYZ）</p>
-<p>首先是多视图图像特征  $\textbf{v}^{MVS}_p$  的过程。我们首先使用共享的 CNN 模型从多视图图像中提取 2D 特征图。然后，我们使用 3 个近景图像作为多视图集，使用 <strong>公式</strong> 将计算出的 2D 特征图投影到参考视图中，并且计算variance cost volume。为了与本文中使用的 MPI 模型保持一致，我们使用与 NeX 中建议的相同的 192 个深度平面。最后，我们使用 3D U-Net 提取最终特征 $\textbf{v}^{MVS}_p$ 。架构图如下：</p>
-<p><img src="/2023/03/08/3d_segmentation/thjHOME\Starpic\nerf\img_3d_segmentation\image-20230204110532603.png" srcset="/img/loading.gif" lazyload alt="image-20230204110532603"></p>
+<h3 id="voxel-feature-embedding">voxel feature embedding</h3>
+<p>计算三个特征（MVS、IBR、XYZ）</p>
+<p>首先是多视图图像特征 <span class="math inline">\(\textbf{v}^{MVS}_p\)</span> 的过程。我们首先使用共享的 CNN 模型从多视图图像中提取 2D 特征图。然后，我们使用 3 个近景图像作为多视图集，使用 <strong>公式</strong> 将计算出的 2D 特征图投影到参考视图中，并且计算variance cost volume。为了与本文中使用的 MPI 模型保持一致，我们使用与 NeX 中建议的相同的 192 个深度平面。最后，我们使用 3D U-Net 提取最终特征 <span class="math inline">\(\textbf{v}^{MVS}_p\)</span> 。架构图如下：</p>
+<figure>
+<img src="/2023/03/08/3d_segmentation/image-20230204110532603.png" srcset="/img/loading.gif" lazyload alt="image-20230204110532603"><figcaption aria-hidden="true">image-20230204110532603</figcaption>
+</figure>
 <p>所有的网络架构如下表：</p>
-<p><img src="/2023/03/08/3d_segmentation/thjHOME\Starpic\nerf\img_3d_segmentation\image-20230204110626391.png" srcset="/img/loading.gif" lazyload alt="image-20230204110626391"></p>
+<figure>
+<img src="/2023/03/08/3d_segmentation/image-20230204110626391.png" srcset="/img/loading.gif" lazyload alt="image-20230204110626391"><figcaption aria-hidden="true">image-20230204110626391</figcaption>
+</figure>
 <blockquote>
-<p>C2D is a 2D convolutional layer, C3D is a 3D convolutional layer, </p>
+<p>C2D is a 2D convolutional layer, C3D is a 3D convolutional layer,</p>
 <p>CT3D is a 3D de-convolutional layer, BN is a batch-normalization layer</p>
 </blockquote>
 <p>最后求出的MVS特征就是给定一个视角r下的不同深度的特征方差（每个像素位置），即xyz轴一个 cost-volume 经过3D UNet后的输出。</p>
 <p>IBR特征就是球谐函数表示的视角无关的RGB系数（N个）加上一个不透明度，也是每个体素都有这样一个特征。</p>
 <p>XYZ特征就是体素的一个位置编码，共56维（xy:40，z:16）</p>
-<h3 id="3D-segmentation-network"><a href="#3D-segmentation-network" class="headerlink" title="3D segmentation network"></a>3D segmentation network</h3><p>训练一个3层的MLP去判断体素是前景还是背景，在2D里面画的线要提升到3D空间里。</p>
+<h3 id="d-segmentation-network">3D segmentation network</h3>
+<p>训练一个3层的MLP去判断体素是前景还是背景，在2D里面画的线要提升到3D空间里。</p>
 <p>对于此提升，我们为每个像素定义一条 3D 射线，<strong>相交的 3D 表面体素</strong> 视为射线上累积透射率低于 γ = 0.01 的第一个体素。这一步为每条射线产生一个“预期深度”，它允许为相应的体素分配前景或背景标签。然后使用标准二元交叉熵损失对我们的网络进行二元分类训练。</p>
-<h3 id="post-processing"><a href="#post-processing" class="headerlink" title="post-processing"></a>post-processing</h3><h2 id="【论文复现】MVSNeRF-Fast-Generalizable-Radiance-Field-Reconstruction-from-Multi-View-Stereo"><a href="#【论文复现】MVSNeRF-Fast-Generalizable-Radiance-Field-Reconstruction-from-Multi-View-Stereo" class="headerlink" title="【论文复现】MVSNeRF: Fast Generalizable Radiance Field Reconstruction from Multi-View Stereo"></a>【论文复现】MVSNeRF: Fast Generalizable Radiance Field Reconstruction from Multi-View Stereo</h2><p>就是上面的那篇论文中提取MVS特征的部分，先将各个视角用2D CNN提取特征图，然后warp到参考视角（需要用相机内外参求单应矩阵，参考之前的笔记：[图形学基础] 相机内外参），求方差之后形成cost volume，过一遍3D UNet 得出volume feature（trilinear插值到目标分辨率）。文件树（这里有两个文件：一个用来train，一个用来finetune），其中的model主要是MVSNet（我们只需要提取cost volume），数据集是大名鼎鼎的LLFF。</p>
+<h3 id="post-processing">post-processing</h3>
+<h2 id="论文复现mvsnerf-fast-generalizable-radiance-field-reconstruction-from-multi-view-stereo">【论文复现】MVSNeRF: Fast Generalizable Radiance Field Reconstruction from Multi-View Stereo</h2>
+<p>就是上面的那篇论文中提取MVS特征的部分，先将各个视角用2D CNN提取特征图，然后warp到参考视角（需要用相机内外参求单应矩阵，参考之前的笔记：[图形学基础] 相机内外参），求方差之后形成cost volume，过一遍3D UNet 得出volume feature（trilinear插值到目标分辨率）。文件树（这里有两个文件：一个用来train，一个用来finetune），其中的model主要是MVSNet（我们只需要提取cost volume），数据集是大名鼎鼎的LLFF。</p>
 <p>网络结构见上面的图。</p>
 <p>注意一些细节：</p>
 <ul>
-<li><p>F.grid_sample：torch 的 grid采样   </p>
-</li>
-<li><p>torch.meshgrid</p>
-</li>
+<li><p>F.grid_sample：torch 的 grid采样</p></li>
+<li><p>torch.meshgrid</p></li>
 </ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br>a = torch.tensor([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>])<br><span class="hljs-built_in">print</span>(a)<br>b = torch.tensor([<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>])<br><span class="hljs-built_in">print</span>(b)<br>x, y = torch.meshgrid(a, b)<br><span class="hljs-built_in">print</span>(x)<br><span class="hljs-built_in">print</span>(y)<br><br>结果显示：<br>tensor([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>])<br>tensor([<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>])<br>tensor([[<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>],<br>        [<span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>],<br>        [<span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>],<br>        [<span class="hljs-number">4</span>, <span class="hljs-number">4</span>, <span class="hljs-number">4</span>]])<br>tensor([[<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>],<br>        [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>],<br>        [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>],<br>        [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>]])<br></code></pre></td></tr></table></figure>
-
-<ul>
-<li></li>
-</ul>
-<h2 id="【论文复现】-NeX-Real-time-View-Synthesis-with-Neural-Basis-Expansion"><a href="#【论文复现】-NeX-Real-time-View-Synthesis-with-Neural-Basis-Expansion" class="headerlink" title="【论文复现】 NeX: Real-time View Synthesis with Neural Basis Expansion"></a>【论文复现】 NeX: Real-time View Synthesis with Neural Basis Expansion</h2><p>主要工作是把nerf的rgb换成球谐函数：<br>$k_0$ 是显式给定的，$k_1$~$k_n$  是由MLP预测出来的，代码（nex-code）主要文件是 train.py（结构可以画棵树），我们最后只需要不透明度（mpi_a）和球谐函数系数（mpi_c, mpi_v），tensorboard保存并可视化了mpi_a和mpi_c。</p>
+<h2 id="论文复现-nex-real-time-view-synthesis-with-neural-basis-expansion">【论文复现】 NeX: Real-time View Synthesis with Neural Basis Expansion</h2>
+<p>主要工作是把nerf的rgb换成球谐函数： <span class="math inline">\(k_0\)</span> 是显式给定的，<span class="math inline">\(k_1\)</span>~<span class="math inline">\(k_n\)</span> 是由MLP预测出来的，代码（nex-code）主要文件是 train.py（结构可以画棵树），我们最后只需要不透明度（mpi_a）和球谐函数系数（mpi_c, mpi_v），tensorboard保存并可视化了mpi_a和mpi_c。</p>
 <p>getMPI()是用来将MLP转为MPI的接口，在generateAlpha函数中调用（预测结果），</p>
 <p>球谐函数这里我们来简单地科普一下：</p>
-<h2 id="【论文解读】Interactive-Segmentation-of-Radiance-Fields"><a href="#【论文解读】Interactive-Segmentation-of-Radiance-Fields" class="headerlink" title="【论文解读】Interactive Segmentation of Radiance Fields"></a>【论文解读】Interactive Segmentation of Radiance Fields</h2>
+<h2 id="论文解读interactive-segmentation-of-radiance-fields">【论文解读】Interactive Segmentation of Radiance Fields</h2>
+
                 
               </div>
             
@@ -345,6 +358,38 @@
             <div>
               <div class="post-metas my-3">
   
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CVNote/" class="category-chain-item">CVNote</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/NeRF/">#NeRF</a>
+      
+        <a href="/tags/CV/">#CV</a>
+      
+        <a href="/tags/3D%E5%88%86%E5%89%B2/">#3D分割</a>
+      
+    </div>
   
 </div>
 
@@ -354,7 +399,7 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div></div>
+      <div>3D segmentation</div>
       <div>https://thj2333.github.io/2023/03/08/3d_segmentation/</div>
     </div>
     <div class="license-meta">
@@ -396,6 +441,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2023/03/08/nerf_code/" title="nerf code">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">nerf code</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
@@ -456,6 +507,12 @@
 
 
   
+
+
+  
+  
+
+
 
 
 
@@ -622,6 +679,40 @@
 
 
   <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
 
   <script  src="/js/local-search.js" ></script>
 
