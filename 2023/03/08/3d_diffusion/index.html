@@ -1,0 +1,761 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/inf.png">
+  <link rel="icon" href="/img/inf.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="thj2333">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="nerf + 生成nerf结合3d生成是近年新兴的方向，从可编辑nerf结合GAN开始，到2022下半年与diffusion缝合，伴随AIGC取得巨大成功，众多科研机构院校统统将目光瞄准3D生成，目前可以将diffusion方法分为两大类思路：以dreamfusion为代表的2d diffusion蒸馏到3d，和arxiv新占坑的diffrf为代表的直接在3d空间中diffusion。本文将着眼于">
+<meta property="og:type" content="article">
+<meta property="og:title" content="3D AIGC (nerf+diffusion)">
+<meta property="og:url" content="https://thj2333.github.io/2023/03/08/3d_diffusion/index.html">
+<meta property="og:site_name" content="thjEarth-616">
+<meta property="og:description" content="nerf + 生成nerf结合3d生成是近年新兴的方向，从可编辑nerf结合GAN开始，到2022下半年与diffusion缝合，伴随AIGC取得巨大成功，众多科研机构院校统统将目光瞄准3D生成，目前可以将diffusion方法分为两大类思路：以dreamfusion为代表的2d diffusion蒸馏到3d，和arxiv新占坑的diffrf为代表的直接在3d空间中diffusion。本文将着眼于">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://thj2333.github.io/img/27.jpg">
+<meta property="article:published_time" content="2023-03-08T14:16:56.601Z">
+<meta property="article:modified_time" content="2023-03-08T14:28:02.327Z">
+<meta property="article:author" content="thj2333">
+<meta property="article:tag" content="NeRF">
+<meta property="article:tag" content="CV">
+<meta property="article:tag" content="diffusion">
+<meta property="article:tag" content="3D生成">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://thj2333.github.io/img/27.jpg">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>3D AIGC (nerf+diffusion) - thjEarth-616</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"thj2333.github.io","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>thjEarth-616</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/27.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="3D AIGC (nerf+diffusion)"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-03-08 22:16" pubdate>
+          2023年3月8日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          55 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">3D AIGC (nerf+diffusion)</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：1 分钟前
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="nerf-生成"><a href="#nerf-生成" class="headerlink" title="nerf + 生成"></a>nerf + 生成</h1><p>nerf结合3d生成是近年新兴的方向，从可编辑nerf结合GAN开始，到2022下半年与diffusion缝合，伴随AIGC取得巨大成功，众多科研机构院校统统将目光瞄准3D生成，目前可以将diffusion方法分为两大类思路：以dreamfusion为代表的2d diffusion蒸馏到3d，和arxiv新占坑的diffrf为代表的直接在3d空间中diffusion。本文将着眼于这两种方法，开启nerf + diffusion的探索之旅。</p>
+<h2 id="dreamfusion"><a href="#dreamfusion" class="headerlink" title="dreamfusion"></a>dreamfusion</h2><p>由谷歌在数十亿图像-文本对上预训练的扩散模型是这篇论文的强大基础，论文摘要提到如果要推广diffusion到3d中，需要具有<strong>大规模3D带标签的数据集</strong>和<strong>3D去噪的模型架构</strong>，但是两者目前都不存在，所以他们采取了蒸馏的方法，引入了一种基于<strong>概率密度蒸馏</strong>的损失，使得2d扩散模型可以用来做先验（优化图像生成器的参数），然后通过随机梯度下降优化随机初始化的NeRF，降低随机角度的2D渲染损失。这个方法不需要3D数据，也不需要修改扩散模型，但生成图像的质量较低，NVIDIA的magic3d后续有了质的提升。</p>
+<h3 id="1-1-模型框架"><a href="#1-1-模型框架" class="headerlink" title="1.1 模型框架"></a>1.1 模型框架</h3><p><img src="/2023/03/08/3d_diffusion/image-20230111221514900.png" srcset="/img/loading.gif" lazyload alt="image-20230111221514900"></p>
+<h3 id="1-2-扩散模型"><a href="#1-2-扩散模型" class="headerlink" title="1.2 扩散模型"></a>1.2 扩散模型</h3><p>对应原论文的 diffusion model and score distillation sampling 扩散模型和分数蒸馏采样（SDS）</p>
+<p>给定初始数据点 $\textbf{x}$ ，扩散模型前向加噪过程中 t 时刻的潜变量 $\textbf{z}_t$ 的条件概率为 $q(\textbf{z}_t|\textbf{x}) = \mathcal{N}(\alpha_t \textbf{x},\sigma_t^2 \textbf{I})$ ，积分得到 $z_t$ 的边际分布为</p>
+<p>$q(\textbf{z}<em>t) = \int q(\textbf{z}<em>t|\textbf{x})q(\textbf{x})d\textbf{x}$ ，满足 $\alpha_t^2 + \sigma_t^2 = 1$ ，在开始时 $\sigma_0 \approx 0$ ，在结束时 $\sigma_T \approx 1$  。生成模型 p 训练目标是从随机正态分布噪声开始缓慢添加结构，转换通常参数化为 :<br>$$<br>p</em>{\phi}(\textbf{z}</em>{t-1}|\textbf{z}<em>{t})=q(\textbf{z}</em>{t-1}|\textbf{z}<em>{t},\textbf{x}=\hat{\textbf{x}}</em>{\phi}(\textbf{z}<em>{t};t))<br>$$<br>其中 q 是可以由前向过程推导出来的后验分布，$\hat{\textbf{x}}</em>{\phi}(\textbf{z}<em>{t};t)$ 是神经网络学出来的最优去噪结果的近似值（随着逆向的每一步不断变化）。但是我们不直接预测 $\hat{\textbf{x}}</em>{\phi}(\textbf{z}<em>{t};t)$ ，而是训练一个 U-Net 去预测噪声 $\epsilon</em>{\phi}(\textbf{z}<em>t;t)$​ ，然后由公式：<br>$$<br>\mathbb{E}[\textbf{x}|\textbf{z}<em>t]\approx\hat{\textbf{x}}</em>{\phi}(\textbf{z}</em>{t};t)=(\textbf{z}<em>t-\sigma_t\epsilon</em>{\phi}(\textbf{z}<em>t;t))/\alpha_t<br>$$<br>求出 $\hat{\textbf{x}}</em>{\phi}(\textbf{z}<em>{t};t)$ ，由Tweedie公式 $\epsilon</em>{\phi}(\textbf{z}<em>t;t)=-\sigma_t s</em>{\phi}(\textbf{z}<em>t;t)$ 可知，预测的噪声又和（平滑密度 $\nabla</em>{\textbf{z}<em>t}\log{p(\textbf{z}<em>t)}$）预测得分函数相关，于是我们的任务从<strong>使用加权证据下限（ELBO）训练生成模型</strong>简化为参数 $\phi$ 的<strong>加权去噪分数目标匹配</strong>：<br>$$<br>\mathcal{L}</em>{Diff}(\phi,\textbf{x})=\mathbb{E}</em>{t\sim\mathcal{U}(0,1),\epsilon\sim\mathcal{N}(0,\textbf{I})}[w(t)|\epsilon_{\phi}(\alpha_t\textbf{x}+\sigma_{t}\epsilon;t)-\epsilon|<em>2^2]<br>$$<br>其中 w(t) 是加权函数。综上，训练扩散模型就是 学习隐变量模型 或者 学习与数据的噪声相对应的一系列得分函数（score function），近似边缘分布 $p</em>{\phi}(\textbf{z}<em>{t};t)$  的得分函数可以由 $s</em>{\phi}(\textbf{z}<em>t;t)=-\epsilon</em>{\phi}(\textbf{z}_t;t)/\sigma_t$ 计算。</p>
+<p>dreamfusion的扩散模型同时学习有条件（条件是text embeddings y）模型和无条件模型（CFG），并进行加权改变两种模型比重：<br>$$<br>\hat{\epsilon}_{\phi}(\textbf{z}<em>t;y,t)=(1+\omega)\epsilon</em>{\phi}(\textbf{z}<em>t;y,t)-\omega\epsilon</em>{\phi}(\textbf{z}_t;t)<br>$$<br>CFG改变得分函数使其偏好 <em>[条件密度/无条件密度]</em> 比值较大的区域，实践中设置 $\omega&gt;0$ 提高样本的保真度（代价是降低多样性）。可以通过分数蒸馏采样限制图像的对称性【？？？】。</p>
+<p>加上nerf作为生成器，可以从参数空间中获得渲染后的图像 x ，记为 $x=g(\theta)$ ，框架可以理解为固定已经训练好的u-net和transformer，将扩散模型作为一个鉴别生成图像的鉴别器，损失函数 $\mathcal{L}<em>{Diff}(\phi,\textbf{x}=g(\theta))$ 只和生成器有关，求loss的梯度回传时可以简化掉不易计算的 u-net 的 jacobian 项，即 $\nabla</em>{\theta}\mathcal{L}_{SDS}(\phi,\textbf{x}=g(\theta))$ （证明见<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2209.14988">原论文</a>附录4）</p>
+<blockquote>
+<p><em>此处可以增加证明</em></p>
+</blockquote>
+<p>通俗地讲，扩散模型没有提供一个固定不变的标签图像，而是直接对 nerf 渲染出来的图像做个评分，这个评分是可以反传梯度的损失函数，由此监督nerf训练，多视角一致性则来源于nerf的本身的一致性。nerf的随机<strong>初始化</strong>可能是模型表现不佳的原因之一，同时<strong>损失函数</strong>可以做修正改进，或许能提升生成效果。</p>
+<h3 id="1-3-dreamfusion-algorithm-算法"><a href="#1-3-dreamfusion-algorithm-算法" class="headerlink" title="1.3 dreamfusion algorithm 算法"></a>1.3 dreamfusion algorithm 算法</h3><p><strong>3D model 的神经渲染</strong></p>
+<p>基础模型：mip-nerf 360</p>
+<ul>
+<li><p>shading 显示着色模型</p>
+<p>产生随机光照给物体制造阴影，密度梯度可以计算法线从而计算阴影，阴影将复杂的几何结构细节凸显出来，比如孔雀的羽毛不是简单的贴图，而是有起伏的不平整的结构，光照之后是有零碎的阴影产生的。</p>
+<p>计算法向量方向公式：$\textbf{n}=-\nabla_{\mu}\tau/|\nabla_{\mu}\tau|$ ，其中 $\tau$ 是体密度， $\mu$ 是位置坐标，我们假设点光源有位置 $l$ ，颜色 $l_{\rho}$ ，环境颜色 $l_a$ ，MLP推理出的物体一点的颜色为 $\rho$​ ，则漫反射后点颜色：<br>$$<br>\textbf{c} = \rho\circ(l_{\rho}\circ\max(0,\mathbf{n}\cdot(l-\mu)/|l-\mu|)+l_a)<br>$$<br>同时白色随机替换点颜色 $\rho$ 也是一种利于产生真正3D结构的方法。</p>
+</li>
+<li><p> scene structure</p>
+</li>
+</ul>
+<p>  背景与对象的分离，缩小边界框（球型）有利于生成单个对象，两个MLP分别生成物体和背景颜色。</p>
+<ul>
+<li><p>geometry regularizers</p>
+<p>对每条射线的不透明度加正则化惩罚，防止不必要地填补空白空间；使用ref-nerf中提出的方向损失修改版本，防止法向量背离相机的密度场中的病态。无纹理着色中正则项很重要。</p>
+</li>
+</ul>
+<p><strong>text-to-3D 生成</strong></p>
+<ul>
+<li><p>random camera and light sampling</p>
+</li>
+<li><p>rendering</p>
+</li>
+<li><p>diffusion loss with view-dependent conditioning</p>
+<p>带视图方向的diffusion，可不可以在diffusion中就精细化不同视角，不同视角的图像质量可能参差不齐，造成质量低</p>
+</li>
+<li><p>optimization</p>
+</li>
+</ul>
+<p>新旧算法伪代码对比：</p>
+<p><img src="/2023/03/08/3d_diffusion/image-20230112154156761.png" srcset="/img/loading.gif" lazyload alt="image-20230112154156761"></p>
+<p><img src="/2023/03/08/3d_diffusion/image-20230112154138065.png" srcset="/img/loading.gif" lazyload alt="image-20230112154138065"></p>
+<p>mip-nerf协方差退火的变化</p>
+<p>nerf MLP结构与激活函数的变化</p>
+<p>shading的参数漫反射 $l_{\rho}$ 和环境光 $l_a$ 的设置，开关shading，开shading时是否开纹理（点颜色）的设置</p>
+<p>空间密度的bias，在训练初期将密度集中到原点附近</p>
+<p>相机和光源采样细节（各自分布，位置相近）</p>
+<p>正则化的超参数（正则化项的大小，方向损失：加阴影的区域并非朝向后面，不透明度正则：避免优化空白空间，分离前景/背景)</p>
+<p>文本提示依赖视角（前侧后）：文本embedding插值效果 不如 直接近似方位角对应的视角文本</p>
+<p>优化器参数设置</p>
+<p>引导权重和seed对结果的影响，多样性和引导权重（条件model权重）和损失函数之间的关系</p>
+<p>非官方复现：<a target="_blank" rel="noopener" href="https://github.com/ashawkey/stable-dreamfusion">https://github.com/ashawkey/stable-dreamfusion</a></p>
+<hr>
+<h2 id="magic-3D"><a href="#magic-3D" class="headerlink" title="magic 3D"></a>magic 3D</h2><p>两阶段优化框架：第一步，由低分辨率扩散模型先验 获得粗糙模型，稀疏3D哈希网格结构加速（instant-ngp）。第二步，在粗糙表示的基础上进一步优化带纹理的3D网格模型。</p>
+<h3 id="2-1-模型框架"><a href="#2-1-模型框架" class="headerlink" title="2.1 模型框架"></a>2.1 模型框架</h3><p><img src="/2023/03/08/3d_diffusion/image-20230112174017325.png" srcset="/img/loading.gif" lazyload alt="image-20230112174017325"></p>
+<h3 id="2-2-coarse-to-fine-diffusion-priors-and-scene-model"><a href="#2-2-coarse-to-fine-diffusion-priors-and-scene-model" class="headerlink" title="2.2 coarse-to-fine diffusion priors and scene model"></a>2.2 coarse-to-fine diffusion priors and scene model</h3><p>instant-ngp 哈希网格</p>
+<p>coarse diffusion priors : eDiff-I prior</p>
+<p>fine diffusion priors : Latent diffusion prior(sd)</p>
+<p>Coarse scene models : instant-ngp</p>
+<p>Fine scene models : textured Meshes(DMTet)</p>
+<hr>
+<h2 id="DiffRF"><a href="#DiffRF" class="headerlink" title="DiffRF"></a>DiffRF</h2><h3 id="3-1-模型框架"><a href="#3-1-模型框架" class="headerlink" title="3.1 模型框架"></a>3.1 模型框架</h3><p><img src="/2023/03/08/3d_diffusion/image-20230113023624381.png" srcset="/img/loading.gif" lazyload></p>
+<p>直接在3D空间里做扩散，两个损失分别代表3D和2D层面的预测与真实对象的差别。3D空间中的辐射场，即gt本身就是不一定准确的，尤其是对于真实场景数据集和复杂的物体，很难学的很准确。</p>
+<h2 id="Dream3D"><a href="#Dream3D" class="headerlink" title="Dream3D"></a>Dream3D</h2><p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230114225554098.png" srcset="/img/loading.gif" lazyload alt="image-20230114225554098"></p>
+<h3 id="4-1-3D形状先验的获取"><a href="#4-1-3D形状先验的获取" class="headerlink" title="4.1 3D形状先验的获取"></a>4.1 3D形状先验的获取</h3><p>重点在形状先验的获取上，nerf采用DVGO表示，由于 CLIP 损失不能提供准确的几何监督，3D 形状先验可能会被逐渐扰乱和遗忘，因此我们还采用形状先验保留损失来保留 3D 形状先验的全局结构。</p>
+<p>为了提供高质量的 3D 先验，论文采用了最先进的 3D 生成模型架构，即 SDF-StyleGAN 。 SDFStyleGAN 是一种类似 StyleGAN2 的生成架构，它将随机噪声 z ∼ N (0, I) 映射到嵌入 eS ∈ W 的潜在形状，并合成 3D 特征量 $F_V$（生成形状的隐式表示）。通过将 x 处的 $F_V$ 的插值特征输入联合训练的 MLP 网络来查询任意位置 x 处的 SDF 值。与原始的 SDF-StyleGAN 为一种形状类别训练一个网络不同，我们改进它以在 ShapeNet 数据集的 13 个类别上训练一个 3D 形状生成器 GS，从而使文本到形状的过程具有更大的灵活性。</p>
+<p>问题在于刚体和非刚体不能相提并论，刚体的几何形状很固定，但小动物就不能简单地生成了，包括之前dreamfusion里各种物体的组合，现实中是找不到参考数据集的。</p>
+<p>只能生成单个物体，类似纹理贴图一样的效果。</p>
+<h3 id="4-2-微调的model"><a href="#4-2-微调的model" class="headerlink" title="4.2 微调的model"></a>4.2 微调的model</h3><p>stable diffusion</p>
+<p>DALLE2</p>
+<p>SDF-StyleGAN</p>
+<p>DVGO</p>
+<p>CLIP</p>
+<h2 id="SparseFusion"><a href="#SparseFusion" class="headerlink" title="SparseFusion"></a>SparseFusion</h2><p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230115002025283.png" srcset="/img/loading.gif" lazyload alt="image-20230115002025283"></p>
+<p>这篇论文还涉及到nerf的泛化性，可以看到他的统计：</p>
+<p>1）已在真实世界数据上进行过演示</p>
+<p>2）适用于稀疏 (2-6) 个输入视图</p>
+<p>3） 生成几何一致的视图</p>
+<p>4） 推广到新的场景实例</p>
+<p>5） 产生看不见的幻觉地区（就是图像里没有的地方，模型能利用先验推断出来）</p>
+<p>SparseFusion 由两个核心组件组成：一个视图条件潜在扩散模型 (VLDM) 和一个优化 Instant NGP 的扩散蒸馏过程。如下图：</p>
+<p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230115002549281.png" srcset="/img/loading.gif" lazyload alt="image-20230115002549281"></p>
+<p>为了实现合理且 3D 一致的预测，采用两步法。首先，我们学习概率视图合成模型，该模型使用几何引导扩散，可以根据给定的查询视图对图像的分布进行建模稀疏视图上下文。虽然这允许生成详细和多样化的输出，但获得的渲染缺乏 3D 一致性。为了提取 3D 表示，我们提出了一个 3D 神经蒸馏过程，将预测的视图分布“蒸馏”成一致的 3D 模式。</p>
+<p>Geometry-guided Probabilistic View Synthesis：</p>
+<ul>
+<li>Epipolar Feature Transformer 对极特征变换器</li>
+<li>View-conditioned Latent Diffusion Model</li>
+</ul>
+<p>Extracting 3D Modes via Diffusion Distillation</p>
+<ul>
+<li>3D Inference as Neural Mode Seeking</li>
+<li>Neural Mode Seeking via Diffusion Distillation</li>
+<li>Multi-step Denoising and Image-space Reconstruction</li>
+</ul>
+<p>实验结果展示了新视图合成还可以，几何形状很差。</p>
+<p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230115004551698.png" srcset="/img/loading.gif" lazyload alt="image-20230115004551698"></p>
+<p>原理的具体细节有待更新↓</p>
+<h3 id="5-1-对极几何"><a href="#5-1-对极几何" class="headerlink" title="5.1 对极几何"></a>5.1 对极几何</h3><h3 id="5-2-原理细节"><a href="#5-2-原理细节" class="headerlink" title="5.2 原理细节"></a>5.2 原理细节</h3><p>SparseFusion由三部分构成：EFT模型（GPNR），以EFT的feature头输出为条件的扩散模型（VLDM），NeRF模型（NGP）。根据文章附录的说明，GPNR 和 VLDM 是联合训练的，然后再用预训练过的模型去优化 NGP 。但是根据目前的开源实现，笔者发现代码中只有 NGP 是被训练的，尚不清楚使用的预训练 GPNR 和 VLDM 模型是从何而来的。这些预训练模型应该是文章作者自己额外训练的结果(笔者推测是基于 GPNR 和 stable diffusion ，其中条件部分把 text embedding 换成 eft embedding )。</p>
+<p>如下图所示，单独使用NeRF模型完成少视角重建任务会导致我们之前提到的均值模糊问题（第一行，EFT），单独使用Diffusion也只能做到生成而难以保证其3D上的一致性（第二行，VLDM），结合两者（第三行，SF），可以用Diffusion模型来重建NeRF看不到的细节，用NeRF来明确Diffusion模型对3D的感知。</p>
+<p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230115152628233.png" srcset="/img/loading.gif" lazyload alt="image-20230115152628233"></p>
+<p>可以参考知乎子喵的笔记： <a target="_blank" rel="noopener" href="https://www.zhihu.com/question/568791838/answer/2805890017">https://www.zhihu.com/question/568791838/answer/2805890017</a></p>
+<h2 id="SJC"><a href="#SJC" class="headerlink" title="SJC"></a>SJC</h2><h2 id="3DiM"><a href="#3DiM" class="headerlink" title="3DiM"></a>3DiM</h2><ul>
+<li><p>我们介绍了 3DiM，一种用于新颖视图合成的无几何图像到图像扩散模型。 </p>
+</li>
+<li><p>我们引入了随机条件采样算法，它鼓励 3DiM 生成 3D 一致的输出。</p>
+</li>
+<li><p>我们介绍了 X-UNet，一种用于 3D 新视图合成的新 UNet 架构（Ronneberger 等人，2015 年）变体，表明架构的变化对于高保真结果至关重要。</p>
+</li>
+<li><p>我们引入了一种用于无几何视图合成模型的评估方案，即 3D 一致性评分，它可以通过在模型输出上训练神经场以数字方式捕获 3D 一致性。</p>
+</li>
+</ul>
+<h3 id="位姿条件扩散模型"><a href="#位姿条件扩散模型" class="headerlink" title="位姿条件扩散模型"></a>位姿条件扩散模型</h3><p>为了激发 3DiMs，让我们从概率的角度考虑给定少量图像的新视图合成问题。给定 3D 场景 S 的完整描述，对于任何姿势 p，姿势 p 处的视图 x(p) 完全由 S 确定，即视图在给定 S 的情况下是条件独立的。但是，我们对以下形式的分布建模感兴趣q(x1, …, xm|xm+1, …, xn) 没有 S，其中视图不再条件独立。一个具体的例子如下：给定一个人的后脑勺，前面有多个似是而非的视图。仅给定后视图的图像到图像模型采样前视图确实应该为每个前视图产生不同的输出 - 不能保证它们彼此一致 - 特别是如果它完美地学习了数据分布。类似地，给定一个看起来很小的物体的单一视图，姿势本身就存在歧义：它是小而近，还是只是很远？因此，鉴于少镜头设置中固有的模糊性，我们需要一种采样方案，其中生成的视图可以相互依赖，以实现 3D 一致性。这与 NeRF 方法形成对比，在 NeRF 方法中，查询光线在给定 3D 表示 S 的情况下是条件独立的——这是一个比在帧之间施加条件独立性更强的条件。这种方法试图为单个场景 S 学习最丰富的可能表示，而 3DiM 则完全避免了为 S 学习生成模型的困难。</p>
+<p><img src="/2023/03/08/3d_diffusion/thjHOME\Starpic\nerf\ing_3d_diffusion\image-20230115013357820.png" srcset="/img/loading.gif" lazyload alt="image-20230115013357820"></p>
+<p>X-UNet架构</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CVNote/" class="category-chain-item">CVNote</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/NeRF/">#NeRF</a>
+      
+        <a href="/tags/CV/">#CV</a>
+      
+        <a href="/tags/diffusion/">#diffusion</a>
+      
+        <a href="/tags/3D%E7%94%9F%E6%88%90/">#3D生成</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>3D AIGC (nerf+diffusion)</div>
+      <div>https://thj2333.github.io/2023/03/08/3d_diffusion/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>thj2333</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年3月8日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/03/08/3d_segmentation/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/20/NeRF-2020/" title="NeRF survey(2020)">
+                        <span class="hidden-mobile">NeRF survey(2020)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
