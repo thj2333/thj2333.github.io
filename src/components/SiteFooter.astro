@@ -1,0 +1,65 @@
+---
+const year = new Date().getFullYear();
+const bars = Array.from({ length: 42 }, (_, i) => (i * 7 + 3) % 5);
+---
+
+<footer class="mt-16">
+  <div class="rule-heavy"></div>
+  <div class="bg-[var(--color-paper-lo)]">
+    <div
+      class="mx-auto grid max-w-[1180px] gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4"
+    >
+      <div class="sm:col-span-2">
+        <div class="flex items-center gap-3">
+          <span
+            class="grid h-9 w-9 place-items-center border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] text-[var(--color-paper-hi)]"
+          >
+            <span class="display text-sm leading-none">616</span>
+          </span>
+          <span class="display text-xl">地球 616</span>
+        </div>
+        <p class="mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-ink-soft)]">
+          主宇宙档案库。存放写过的技术笔记、正在用的工具，以及一些没想明白的问题。
+        </p>
+        <div class="mt-5 flex items-center gap-2">
+          <span class="sticker text-xs">ISSUE 0616</span>
+          <span class="font-mono text-[0.62rem] tracking-[0.2em]"
+            >SINCE 2022</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <p class="label mb-3">本刊导航</p>
+        <ul class="space-y-2 text-sm font-bold">
+          <li><a class="hover:text-[var(--color-hero)]" href="/archive">档案库</a></li>
+          <li><a class="hover:text-[var(--color-hero)]" href="/armory">工具柜</a></li>
+          <li><a class="hover:text-[var(--color-hero)]" href="/dossier">人物档案</a></li>
+          <li><a class="hover:text-[var(--color-hero)]" href="/rss.xml">订阅 RSS</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="label mb-3">印次信息</p>
+        <div class="barcode">
+          {bars.map((w) => <span style={`width:${w}px`} />)}
+        </div>
+        <p class="mt-2 font-mono text-[0.6rem] tracking-[0.16em]">
+          PRESSED IN EARTH-616
+        </p>
+        <p class="font-mono text-[0.6rem] tracking-[0.16em]">
+          VOL.06 · NO.0616
+        </p>
+      </div>
+    </div>
+
+    <div class="border-t-2 border-[var(--color-ink)]">
+      <div
+        class="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-2 px-4 py-3 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]"
+      >
+        <span>© {year} thj2333 · 保留所有宇宙的版权</span>
+        <span>排版：ASTRO + 手工 CSS · 无框架暗改</span>
+      </div>
+    </div>
+  </div>
+</footer>

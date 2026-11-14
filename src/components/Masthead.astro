@@ -1,0 +1,85 @@
+---
+const path = Astro.url.pathname;
+const links = [
+  { href: "/", label: "首页", en: "COVER" },
+  { href: "/archive", label: "档案", en: "ARCHIVE" },
+  { href: "/armory", label: "工具", en: "ARMORY" },
+  { href: "/dossier", label: "关于", en: "DOSSIER" },
+];
+
+const isActive = (href: string) =>
+  href === "/" ? path === "/" : path.startsWith(href);
+---
+
+<header class="sticky top-0 z-50">
+  <div class="rule-heavy"></div>
+  <div class="bg-[var(--color-paper-lo)] border-b-2 border-[var(--color-ink)]">
+    <div
+      class="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-4 py-1.5"
+    >
+      <div class="flex items-center gap-4">
+        <span class="hidden font-mono text-[0.62rem] tracking-[0.22em] sm:inline"
+          >EARTH-616</span
+        >
+        <span class="hidden font-mono text-[0.62rem] tracking-[0.22em] sm:inline"
+          >第 0616 期</span
+        >
+        <span class="font-mono text-[0.62rem] tracking-[0.22em]"
+          >单期定价 ¥0.00</span
+        >
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 bg-[var(--color-hero)] blink"></span>
+        <span class="font-mono text-[0.62rem] tracking-[0.22em]"
+          >档案库在线</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="border-b-[3px] border-[var(--color-ink)] bg-[var(--color-paper)]/95 backdrop-blur-sm"
+  >
+    <div
+      class="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 px-4 py-3"
+    >
+      <a href="/" class="group flex items-center gap-3">
+        <span
+          class="grid h-11 w-11 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] text-[var(--color-paper-hi)] shadow-[3px_3px_0_0_var(--color-ink)] transition-transform group-hover:-rotate-6"
+        >
+          <span class="display text-lg leading-none">616</span>
+        </span>
+        <span class="leading-none">
+          <span class="label block text-[var(--color-ink-soft)]"
+            >THJ / 个人站</span
+          >
+          <span class="display block text-2xl sm:text-[1.7rem]">地球 616</span>
+        </span>
+      </a>
+
+      <nav class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        {
+          links.map((l) => (
+            <a
+              href={l.href}
+              aria-current={isActive(l.href) ? "page" : undefined}
+              class:list={[
+                "group relative border-[3px] border-[var(--color-ink)] px-3 py-1.5 transition-all",
+                isActive(l.href)
+                  ? "bg-[var(--color-ink)] text-[var(--color-paper-hi)] shadow-[3px_3px_0_0_var(--color-ink)]"
+                  : "bg-[var(--color-paper-hi)] hover:-translate-y-0.5 hover:bg-[var(--color-reactor)] hover:shadow-[4px_4px_0_0_var(--color-ink)]",
+              ]}
+            >
+              <span class="display text-sm tracking-[0.06em] sm:text-base">
+                {l.label}
+              </span>
+              <span class="ml-1.5 hidden font-mono text-[0.55rem] tracking-[0.18em] opacity-60 sm:inline">
+                {l.en}
+              </span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,50 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="404 · 宇宙分支不存在" period="404">
+  <div class="relative flex min-h-[70vh] flex-col justify-center overflow-hidden py-10">
+    <div
+      class="pointer-events-none absolute right-[-4rem] top-1/2 h-[30rem] w-[30rem] -translate-y-1/2 halftone dot-fade text-[var(--color-hero)] opacity-[0.16]"
+      aria-hidden="true"
+    >
+    </div>
+
+    <div class="relative">
+      <span class="caption rise d1">读取失败 / SIGNAL LOST</span>
+
+      <h1 class="display rise d2 mt-4 leading-[0.8]">
+        <span class="ink-outline jump-shadow block text-[7rem] text-[var(--color-hero)] sm:text-[12rem]"
+          >404</span
+        >
+      </h1>
+
+      <p class="rise d3 mt-5 max-w-lg text-lg font-bold leading-relaxed">
+        这条宇宙分支没有被收录。可能是页号印错，也可能是它在上一次
+        <span class="bg-[var(--color-reactor)] px-1">时间线重启</span>里被删掉了。
+      </p>
+
+      <p
+        class="rise d3 mt-3 font-mono text-[0.66rem] tracking-[0.16em] text-[var(--color-ink-soft)]"
+      >
+        ERR_CODE: 616-EXTINCTION · RECOMMEND: RETURN TO MAIN EARTH
+      </p>
+
+      <div class="rise d4 mt-8 flex flex-wrap gap-3">
+        <a href="/" class="btn-616">返回主宇宙 →</a>
+        <a href="/archive" class="btn-616 btn-ghost">翻档案库</a>
+      </div>
+
+      <div
+        class="sticker absolute right-2 top-24 hidden rotate-[9deg] px-4 py-2 text-sm sm:block"
+        aria-hidden="true"
+      >
+        WRONG EARTH · 838
+      </div>
+
+      <div class="balloon rise d5 mt-14 max-w-sm -rotate-1 text-sm">
+        「别慌，616 是主宇宙。分支炸了不影响主刊连载。」
+      </div>
+    </div>
+  </div>
+</Base>

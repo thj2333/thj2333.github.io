@@ -1,0 +1,84 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.issue - a.data.issue,
+);
+
+const years = [...new Set(posts.map((p) => p.data.date.getFullYear()))].sort(
+  (a, b) => b - a,
+);
+
+const fmt = (d: Date) =>
+  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+
+const issueNo = (n: number) => String(n).padStart(3, "0");
+---
+
+<Base
+  period="档案库"
+  description="地球 616 的全部刊期：技术笔记、论文精读与踩坑记录。"
+>
+  <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
+    <div
+      class="pointer-events-none absolute -right-6 -top-10 h-40 w-40 halftone dot-fade text-[var(--color-ink)] opacity-[0.08]"
+      aria-hidden="true"
+    >
+    </div>
+    <span class="caption rise d1">档案库 / ARCHIVE</span>
+    <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">全部期号</h1>
+    <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
+      一共 {posts.length} 期。按印次倒序排列，越往下越旧。
+    </p>
+  </header>
+
+  {
+    years.map((year, yi) => (
+      <section class="mt-10">
+        <div class="mb-5 flex items-center gap-4">
+          <h2 class="display text-4xl text-[var(--color-hero)]">{year}</h2>
+          <div class="rule-heavy flex-1" />
+          <span class="label text-[var(--color-ink-soft)]">
+            {posts.filter((p) => p.data.date.getFullYear() === year).length} 期
+          </span>
+        </div>
+
+        <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {posts
+            .filter((p) => p.data.date.getFullYear() === year)
+            .map((p, i) => (
+              <a
+                href={`/archive/${p.id}`}
+                class={`panel panel-hover group flex flex-col overflow-hidden rise d${Math.min(i + 2, 6)}`}
+              >
+                <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-ink)] px-3 py-1.5 text-[var(--color-paper-hi)]">
+                  <span class="font-mono text-[0.6rem] tracking-[0.16em]">
+                    ISSUE #{issueNo(p.data.issue)}
+                  </span>
+                  <span class="font-mono text-[0.6rem] tracking-[0.1em] opacity-70">
+                    {fmt(p.data.date)}
+                  </span>
+                </div>
+                <div class="flex flex-1 flex-col p-5">
+                  <h3 class="display text-xl leading-tight transition-colors group-hover:text-[var(--color-hero)]">
+                    {p.data.title}
+                  </h3>
+                  <p class="mt-2.5 flex-1 text-[0.8rem] leading-relaxed text-[var(--color-ink-soft)]">
+                    {p.data.excerpt}
+                  </p>
+                  <div class="mt-4 flex flex-wrap items-center gap-1.5">
+                    {p.data.tags.slice(0, 3).map((t) => (
+                      <span class="border-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)] px-1.5 py-0.5 font-mono text-[0.55rem] tracking-[0.08em]">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </a>
+            ))}
+        </div>
+      </section>
+    ))
+  }
+</Base>

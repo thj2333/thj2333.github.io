@@ -1,0 +1,173 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const total = posts.length;
+
+const fmtMonth = (d: Date) =>
+  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+const timeline = [...posts]
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf())
+  .map((p) => ({
+    when: fmtMonth(p.data.date),
+    title: p.data.title,
+    href: `/archive/${p.id}`,
+  }));
+
+const bio = [
+  { k: "代码 / CODE", v: 78 },
+  { k: "论文 / PAPERS", v: 64 },
+  { k: "咖啡 / COFFEE", v: 91 },
+  { k: "拖延 / DELAY", v: 37 },
+];
+---
+
+<Base period="关于" description="thj2333 的人物档案：身份、坐标与联系方式。">
+  <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
+    <div
+      class="pointer-events-none absolute -right-6 -top-8 h-40 w-40 halftone dot-fade text-[var(--color-ink)] opacity-[0.08]"
+      aria-hidden="true"
+    >
+    </div>
+    <span class="caption rise d1">人物档案 / DOSSIER</span>
+    <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">关于本刊作者</h1>
+  </header>
+
+  <div class="mt-6 grid gap-5 lg:grid-cols-12">
+    <!-- 证件卡 -->
+    <section class="panel crop-marks self-start lg:col-span-7">
+      <div
+        class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-cape)] px-4 py-2"
+      >
+        <span class="label text-[var(--color-paper-hi)]"
+          >SHIELD ARCHIVE · PERSONNEL FILE</span
+        >
+        <span
+          class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-paper-hi)]/70"
+          >616-A</span
+        >
+      </div>
+
+      <div class="p-6">
+        <div class="flex flex-wrap items-start gap-5">
+          <div
+            class="relative grid h-28 w-28 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] shadow-[5px_5px_0_0_var(--color-ink)]"
+          >
+            <span class="display text-4xl text-[var(--color-paper-hi)]">THJ</span>
+            <span
+              class="absolute -bottom-2.5 -right-2.5 rotate-6 border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1.5 py-0.5 font-mono text-[0.5rem] font-bold"
+              >VERIFIED</span
+            >
+          </div>
+          <div class="min-w-0 flex-1">
+            <h2 class="display text-4xl leading-none">thj2333</h2>
+            <p class="label mt-2 text-[var(--color-hero)]">开发者 / 学生</p>
+            <p class="mt-3 text-[0.88rem] leading-relaxed text-[var(--color-ink-soft)]">
+              写代码，读论文，顺手画点分镜的排版。关心 3D 视觉与生成模型，也在补那些当年没学扎实的底子。
+            </p>
+          </div>
+        </div>
+
+        <dl class="mt-7 space-y-4">
+          {
+            bio.map((s) => (
+              <div class="flex items-center gap-3">
+                <dt class="w-32 shrink-0 font-mono text-[0.56rem] tracking-[0.14em] text-[var(--color-ink-soft)]">
+                  {s.k}
+                </dt>
+                <div class="h-4 flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)]">
+                  <div
+                    class="h-full halftone dot-fade text-[var(--color-ink)] opacity-80"
+                    style={`width:${s.v}%;background-color:var(--color-hero)`}
+                  />
+                </div>
+                <dd class="w-8 text-right font-mono text-[0.6rem] font-bold">
+                  {s.v}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <div class="mt-7 grid grid-cols-3 gap-3 border-t-2 border-dashed border-[var(--color-ink)]/40 pt-5">
+          <div>
+            <p class="display text-2xl">{String(total).padStart(2, "0")}</p>
+            <p class="label text-[var(--color-ink-soft)]">已刊期号</p>
+          </div>
+          <div>
+            <p class="display text-2xl">05</p>
+            <p class="label text-[var(--color-ink-soft)]">在用工具</p>
+          </div>
+          <div>
+            <p class="display text-2xl">616</p>
+            <p class="label text-[var(--color-ink-soft)]">常驻宇宙</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 侧栏 -->
+    <div class="space-y-5 lg:col-span-5">
+      <section class="panel-dark p-5">
+        <h2 class="display text-2xl text-[var(--color-hud)]">信号</h2>
+        <p class="mt-2 text-[0.8rem] leading-relaxed text-[var(--color-hud)]/65">
+          最稳定的联系方式是 GitHub。邮件会看，但可能隔几天。
+        </p>
+        <ul class="mt-4 space-y-2 font-mono text-[0.72rem]">
+          <li>
+            <a
+              href="https://github.com/thj2333"
+              class="flex items-center justify-between border-b border-[var(--color-hud)]/20 py-1.5 text-[var(--color-hud)]/80 hover:text-[var(--color-hud)]"
+            >
+              <span>GITHUB</span><span>thj2333 →</span></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://github.com/thj2333/thj2333.github.io"
+              class="flex items-center justify-between border-b border-[var(--color-hud)]/20 py-1.5 text-[var(--color-hud)]/80 hover:text-[var(--color-hud)]"
+            >
+              <span>OLD SITE</span><span>archived →</span></a
+            >
+          </li>
+          <li>
+            <span
+              class="flex items-center justify-between border-b border-[var(--color-hud)]/20 py-1.5 text-[var(--color-hud)]/50"
+            >
+              <span>EMAIL</span><span>见 GitHub 主页</span></span
+            >
+          </li>
+        </ul>
+      </section>
+
+      <section class="panel p-5">
+        <h2 class="display text-2xl">本刊时间线</h2>
+        <ol class="mt-3 space-y-3">
+          {
+            timeline.map((t, i) => (
+              <li class="flex gap-3">
+                <span class="mt-1 font-mono text-[0.55rem] text-[var(--color-ink-soft)]">
+                  {t.when}
+                </span>
+                <span class="flex-1 border-l-2 border-[var(--color-ink)]/30 pl-3">
+                  <a
+                    href={t.href}
+                    class="text-[0.82rem] font-bold leading-snug hover:text-[var(--color-hero)]"
+                  >
+                    {t.title}
+                  </a>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+    </div>
+  </div>
+
+  <div class="balloon mt-10 max-w-md rotate-1 text-sm">
+    「这个站没有评论区。想聊就发 issue，我会当读者来信处理。」
+  </div>
+</Base>

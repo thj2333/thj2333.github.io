@@ -1,0 +1,136 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+const all = (await getCollection("blog")).sort(
+  (a, b) => b.data.issue - a.data.issue,
+);
+const idx = all.findIndex((p) => p.id === post.id);
+const newer = idx > 0 ? all[idx - 1] : null;
+const older = idx < all.length - 1 ? all[idx + 1] : null;
+
+const fmt = (d: Date) =>
+  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+
+const issueNo = (n: number) => String(n).padStart(3, "0");
+const toc = headings.filter((h) => h.depth === 2);
+---
+
+<Base
+  period={post.data.title}
+  description={post.data.excerpt}
+>
+  <nav class="label flex items-center gap-2 text-[var(--color-ink-soft)]">
+    <a href="/" class="hover:text-[var(--color-hero)]">封面</a>
+    <span aria-hidden="true">/</span>
+    <a href="/archive" class="hover:text-[var(--color-hero)]">档案库</a>
+    <span aria-hidden="true">/</span>
+    <span class="text-[var(--color-ink)]">#{issueNo(post.data.issue)}</span>
+  </nav>
+
+  <article class="mt-4">
+    <header class="crop-marks relative border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-hi)] p-6 shadow-[7px_7px_0_0_var(--color-ink)] sm:p-9">
+      <div
+        class="pointer-events-none absolute right-0 top-0 h-24 w-24 halftone text-[var(--color-hero)] opacity-[0.14]"
+        aria-hidden="true"
+      >
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <span class="sticker text-[0.7rem]">ISSUE #{issueNo(post.data.issue)}</span>
+        <span class="caption">{post.data.category}</span>
+        <span class="font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
+          {fmt(post.data.date)}
+        </span>
+      </div>
+
+      <h1 class="display mt-5 text-4xl leading-[0.95] sm:text-6xl">
+        {post.data.title}
+      </h1>
+
+      <p class="mt-4 max-w-2xl border-l-4 border-[var(--color-hero)] pl-3 text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
+        {post.data.excerpt}
+      </p>
+
+      <div class="mt-5 flex flex-wrap gap-1.5">
+        {post.data.tags.map((t) => (
+          <span class="border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-2 py-0.5 font-mono text-[0.58rem] font-bold tracking-[0.08em]">
+            #{t}
+          </span>
+        ))}
+      </div>
+    </header>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-12">
+      {toc.length > 1 && (
+        <aside class="lg:col-span-3">
+          <div class="sticky top-32 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] p-4 shadow-[5px_5px_0_0_var(--color-ink)]">
+            <p class="label mb-2 border-b-2 border-[var(--color-ink)] pb-1.5">
+              本期内页
+            </p>
+            <ol class="space-y-1.5">
+              {toc.map((h, i) => (
+                <li>
+                  <a
+                    href={`#${h.slug}`}
+                    class="flex gap-2 text-[0.78rem] font-bold leading-snug text-[var(--color-ink-soft)] hover:text-[var(--color-hero)]"
+                  >
+                    <span class="font-mono text-[0.58rem] opacity-50">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </aside>
+      )}
+
+      <div class:list={["prose-616", toc.length > 1 ? "lg:col-span-9" : "lg:col-span-12 max-w-3xl"]}>
+        <Content />
+      </div>
+    </div>
+  </article>
+
+  <nav class="mt-10 grid gap-4 border-t-[3px] border-[var(--color-ink)] pt-6 sm:grid-cols-2">
+    {
+      older ? (
+        <a href={`/archive/${older.id}`} class="panel panel-hover group p-4">
+          <span class="label text-[var(--color-ink-soft)]">← 上一期</span>
+          <span class="display mt-1 block text-lg leading-tight group-hover:text-[var(--color-hero)]">
+            {older.data.title}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      newer ? (
+        <a href={`/archive/${newer.id}`} class="panel panel-hover group p-4 sm:text-right">
+          <span class="label text-[var(--color-ink-soft)]">下一期 →</span>
+          <span class="display mt-1 block text-lg leading-tight group-hover:text-[var(--color-hero)]">
+            {newer.data.title}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+  </nav>
+
+  <div class="mt-6">
+    <a href="/archive" class="font-mono text-[0.68rem] tracking-[0.16em] hover:text-[var(--color-hero)]">
+      ← 返回档案库
+    </a>
+  </div>
+</Base>

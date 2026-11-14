@@ -1,0 +1,61 @@
+---
+import "../styles/global.css";
+import Masthead from "../components/Masthead.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  /** 页面主标题（用于 <title> 后缀） */
+  period?: string;
+}
+
+const {
+  title = "地球 616 — thj2333 的档案库",
+  description = "地球 616 主宇宙档案库：技术笔记、论文精读与正在使用的工具。",
+  period,
+} = Astro.props;
+
+const fullTitle = period ? `${period} · 地球 616` : title;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#efe6d0" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="地球 616" href="/rss.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+
+  <body class="min-h-screen">
+    <div class="paper-vignette" aria-hidden="true"></div>
+    <div class="paper-grain" aria-hidden="true"></div>
+
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[70] focus:border-[3px] focus:border-[var(--color-ink)] focus:bg-[var(--color-reactor)] focus:px-4 focus:py-2 focus:font-bold"
+      >跳到正文</a
+    >
+
+    <Masthead />
+
+    <main id="main" class="mx-auto max-w-[1180px] px-4 pb-8 pt-6">
+      <slot />
+    </main>
+
+    <SiteFooter />
+  </body>
+</html>
