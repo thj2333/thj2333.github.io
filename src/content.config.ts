@@ -18,4 +18,16 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+/** 工具文档：目前挂在 /armory 对应工具卡片里 */
+const docs = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/docs" }),
+  schema: z.object({
+    title: z.string(),
+    /** 关联的工具名，例如 "Jarvis" */
+    tool: z.string(),
+    summary: z.string().default(""),
+    updated: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, docs };

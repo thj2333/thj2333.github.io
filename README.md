@@ -62,6 +62,7 @@ npm run preview  # 预览构建结果
 | 非 MCU 别册（福克斯、索尼、早期单片、旧剧集） | `src/data/legacy.ts` |
 | 多元宇宙地图（宇宙、地标坐标、主题） | `src/data/multiverse.ts` |
 | 博客分类（中英文名、状态、主色） | `src/data/categories.ts` |
+| 工具手册（挂在 `/armory` 对应工具卡片里） | `src/content/docs/*.md` |
 | 智能助手 / 无限宝石 / 3D 工具 | `src/data/tools.ts` |
 | 博客文章 | `src/content/blog/*.md` |
 | 站点名、刊号、导航 | `src/components/Masthead.astro` |
@@ -70,6 +71,21 @@ npm run preview  # 预览构建结果
 | 配色与印刷元件 | `src/styles/global.css` |
 
 电影、剧集与英雄都是纯数据，加一条就往里追一条，页面自动渲染。电影在 `films`，剧集在 `series`（`kind` 分真人/动画/特辑），英雄卡的颜色来自 `accent` 字段。非 MCU 作品按组放在 `legacy.ts` 的 `legacyGroups` 里，每组自带厂牌、色标与说明。
+
+## 工具手册
+
+`/armory` 里每个助手可以挂一份使用说明，写在 `src/content/docs/*.md`：
+
+```yaml
+---
+title: "博客编辑器使用说明"
+tool: "Jarvis"          # 对应 tools.ts 里的助手名
+summary: "一句话摘要，显示在折叠条上"
+updated: "2026-11-15"
+---
+```
+
+`tool` 匹配到哪个助手，文档就以可折叠面板的形式渲染在那张卡片里。展开时卡片会自动占满整行（`:has(details[open])`），避免旁边的卡片被拉出空白。
 
 ## 博客分类
 

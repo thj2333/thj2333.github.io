@@ -1,6 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { assistants, stones, gen3d } from "../../data/tools";
+import { getCollection, render } from "astro:content";
+
+const docEntries = await getCollection("docs");
+const jarvisEntry = docEntries.find((d) => d.data.tool === "Jarvis");
+const JarvisManual = jarvisEntry ? (await render(jarvisEntry)).Content : null;
 ---
 
 <Base period="工具柜" description="地球 616 工具柜：智能助手、无限宝石与 3D 生成工具。">
@@ -31,12 +36,12 @@ import { assistants, stones, gen3d } from "../../data/tools";
       <span class="label text-[var(--color-ink-soft)]">ASSISTANTS</span>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="assistants grid gap-4 md:grid-cols-2">
       {
         assistants.map((a, i) => (
           <article
             class:list={[
-              "panel-dark rise transition-transform duration-200 hover:-translate-y-1",
+              "assistant-card panel-dark rise transition-transform duration-200 hover:-translate-y-1",
               `d${Math.min(i + 1, 6)}`,
             ]}
           >
@@ -75,6 +80,22 @@ import { assistants, stones, gen3d } from "../../data/tools";
               <p class="mt-3 text-[0.8rem] leading-relaxed text-[var(--color-hud)]/75">
                 {a.persona}
               </p>
+
+              {a.name === "Jarvis" && JarvisManual && (
+                <details class="manual">
+                  <summary>
+                    <span>
+                      使用说明 / MANUAL
+                      <em>{jarvisEntry?.data.summary}</em>
+                    </span>
+                  </summary>
+                  <div class="manual-body">
+                    <div class="manual-inner prose-616">
+                      <JarvisManual />
+                    </div>
+                  </div>
+                </details>
+              )}
             </div>
           </article>
         ))
@@ -252,6 +273,95 @@ import { assistants, stones, gen3d } from "../../data/tools";
     50% {
       opacity: 0.42;
     }
+  }
+
+  /* ---- Jarvis 手册 ---- */
+
+  .manual {
+    margin-top: 0.9rem;
+    border: 2px solid rgba(35, 224, 255, 0.3);
+  }
+
+  .manual summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    cursor: pointer;
+    padding: 0.5rem 0.7rem;
+    background: rgba(35, 224, 255, 0.07);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-hud);
+    list-style: none;
+  }
+
+  .manual summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .manual summary em {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 0.62rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgba(230, 246, 251, 0.55);
+  }
+
+  .manual summary::after {
+    content: "展开 ▾";
+    flex: none;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+  }
+
+  .manual[open] summary::after {
+    content: "收起 ▴";
+  }
+
+  .assistants {
+    align-items: start;
+  }
+
+  /* 展开手册时占满整行，避免旁边卡片被拉出大片空白 */
+  .assistant-card:has(details[open]) {
+    grid-column: 1 / -1;
+  }
+
+  .manual-body {
+    background: var(--color-paper);
+    padding: 1rem 1.1rem 1.3rem;
+    max-height: 36rem;
+    overflow: auto;
+  }
+
+  .manual-inner {
+    max-width: 72ch;
+  }
+
+  .manual-body :global(h2) {
+    font-size: 1.1rem;
+    margin-top: 1.3em;
+  }
+
+  .manual-body :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .manual-body :global(pre),
+  .manual-body :global(table) {
+    font-size: 0.72rem;
+  }
+
+  .manual-body :global(p),
+  .manual-body :global(li) {
+    font-size: 0.8rem;
+    line-height: 1.7;
   }
 
   @media (prefers-reduced-motion: reduce) {
