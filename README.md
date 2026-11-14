@@ -2,179 +2,38 @@
 
 一个「美漫刊物」风格的个人站：新闻纸底、平涂油墨、粗描边、BEN-DAY 网点、分格排版，深色 HUD 面板做科技切角。
 
-## 页面
+站点分四块：
 
-| 路由 | 内容 |
-| --- | --- |
-| `/` | 封面：本期企划 + 终端目录 + 最新博客 + 工具柜速览 + 六颗宝石 |
-| `/archive` | **多元宇宙地图**：616 主宇宙 / 199999 MCU / 838 光照会 / 10005 X 战警，四套地图版式与 18 处地标 |
-| `/blog` | 博客列表：6 个分类分区，**分类与文章均可拖动排序** |
-| `/blog/<slug>` | 单篇博客，带本期内页目录与上下期 |
-| `/armory` | 工具柜：智能助手 / 无限宝石 / 3D 生成工具（占位，未实现） |
-| `/dossier` | ~~人物档案~~ 已下线 |
-| `/blog/mcu-timeline` | MCU 40 部电影 + 23 部剧集年表（数据驱动，通栏排版） |
-| `/blog/mcu-roster` | 22 位英雄 + 57 部非 MCU 别册 |
-| `/blog/ai-tools` | AI 工具清单，标记「持续更新」 |
-| `/blog/ai-leaderboards` | 榜单站点与工具目录，标记「持续更新」 |
-| `/rss.xml` | RSS |
-| `/404` | 宇宙分支不存在 |
+- **`/`** 封面 —— 本期企划、最新博客、工具柜速览
+- **`/archive`** 多元宇宙地图 —— 616 主宇宙 / 199999 MCU / 838 光照会 / 10005 X 战警，四套地图版式、18 处地标
+- **`/blog`** 博客 —— 六个分类分区，分类与文章都能拖动排序
+- **`/armory`** 工具柜 —— 智能助手（Jarvis，含手册）、无限宝石、3D 生成工具
 
-## 技术栈
-
-- [Astro 5](https://astro.build) — 静态生成，无客户端 JS
-- Tailwind CSS v4（`@tailwindcss/vite`）+ 手写印刷体例 CSS
-- 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文走系统 PingFang / Noto Sans SC
-- 内容：Astro Content Collections（Markdown + zod schema）
-
-## Jarvis（独立应用）
-
-本地 git 控制台不在这个仓库里，已经拆成独立应用：
-
-```
-/Users/thj/Desktop/Code/jarvis
-```
-
-```bash
-cd ../jarvis
-npm start          # http://127.0.0.1:4400（或双击 start.command）
-```
-
-它管三件事，仓库可随时切换，配置存在 `jarvis/data/config.json`：
-
-| 功能 | 作用 |
-| --- | --- |
-| 编辑器 | 文件树 + Markdown 实时预览（双击定位源码行） |
-| 发布 | 构建校验 → 提交 → 推送，交给 Actions |
-| 同步 | 设置远端、拉取（`--ff-only`）、推送；可扫描并登记本地所有 git 仓库 |
-
-详见 `jarvis/README.md`。
-
-## 命令
+技术栈：Astro 5 静态生成 + Tailwind v4 + 手写印刷体例 CSS，字体自托管，内容走 Content Collections（Markdown + zod）。
 
 ```bash
 npm install
 npm run dev      # http://localhost:4321
-npm run build    # 输出到 dist/
-npm run preview  # 预览构建结果
+npm run build    # 输出 dist/
 ```
 
-## 数据在哪
+## Jarvis 助手
 
-| 想改什么 | 改哪里 |
+站点的写作、发布、版本管理都交给 **Jarvis**——一个独立的本地应用，不在本仓库内：
+
+```
+~/Desktop/Code/jarvis      # macOS 应用 + Node 服务
+```
+
+| 功能 | 作用 |
 | --- | --- |
-| MCU 电影年表 / 剧集 / 英雄名册 | `src/data/mcu.ts` |
-| 非 MCU 别册（福克斯、索尼、早期单片、旧剧集） | `src/data/legacy.ts` |
-| 多元宇宙地图（宇宙、地标坐标、主题） | `src/data/multiverse.ts` |
-| 博客分类（中英文名、状态、主色） | `src/data/categories.ts` |
-| 工具手册（挂在 `/armory` 对应工具卡片里） | `src/content/docs/*.md` |
-| 智能助手 / 无限宝石 / 3D 工具 | `src/data/tools.ts` |
-| 博客文章 | `src/content/blog/*.md` |
-| 站点名、刊号、导航 | `src/components/Masthead.astro` |
-| 页脚 | `src/components/SiteFooter.astro` |
-| 首页版面 | `src/pages/index.astro` |
-| 配色与印刷元件 | `src/styles/global.css` |
+| 编辑器 | 文件树 + 站点实时预览；点击定位源码；可切换编辑/浏览模式 |
+| 发布 | 构建校验 → 提交 → 推送，交给 GitHub Actions 上线 |
+| 同步 | 登记任意本地 git 仓库，设远端、拉取（`--ff-only`）、推送 |
+| 应用 | 记录 .app 与源码路径，一键重新打包，版本可回退 |
 
-电影、剧集与英雄都是纯数据，加一条就往里追一条，页面自动渲染。电影在 `films`，剧集在 `series`（`kind` 分真人/动画/特辑），英雄卡的颜色来自 `accent` 字段。非 MCU 作品按组放在 `legacy.ts` 的 `legacyGroups` 里，每组自带厂牌、色标与说明。
+启动：双击 `Jarvis.app`，或 `cd ../jarvis && npm start`。
 
-## 工具手册
+工具柜里展示的手册就是 `src/content/docs/jarvis-*.md`，页面由 `src/pages/armory/index.astro` 读取渲染。
 
-`/armory` 里每个助手可以挂一份使用说明，写在 `src/content/docs/*.md`：
-
-```yaml
----
-title: "博客编辑器使用说明"
-tool: "Jarvis"          # 对应 tools.ts 里的助手名
-summary: "一句话摘要，显示在折叠条上"
-updated: "2026-11-15"
----
-```
-
-`tool` 匹配到哪个助手，文档就以可折叠面板的形式渲染在那张卡片里。展开时卡片会自动占满整行（`:has(details[open])`），避免旁边的卡片被拉出空白。
-
-## 博客分类
-
-六类，中英文名在 `src/data/categories.ts` 里定义：
-
-| id | 中文 | English | 状态 |
-| --- | --- | --- | --- |
-| `cinema` | IP 电影 | IP CINEMA | 已上线 |
-| `tools` | 实用工具 | TOOLKIT | 已上线 |
-| `research` | 技术研究 | RESEARCH | 建设中 |
-| `music` | 音乐鉴赏 | SOUNDTRACK | 建设中 |
-| `travel` | 旅游美食 | WANDER | 建设中 |
-| `whatif` | 假如 | WHAT IF | 建设中 |
-
-文章在 frontmatter 里用 `cat: "tools"` 归类；`status: "wip"` 的分类会渲染成虚线「建设中」占位块。
-
-**拖动排序**：分类轨和文章卡片都支持拖拽（HTML5 DnD），拖动后会同步重排分区、写进 `localStorage`（`e616:catOrder:v1` / `e616:postOrder:v1`），刷新仍保留；「重置顺序」按钮清空并还原默认。键盘可用 `Alt + 方向键` 移动当前项。
-
-> 排序只存在本地，不写回文件——所以它是「读者自己的视图」，不会影响其他访客。
-
-## 写一篇博客
-
-`src/content/blog/` 下新建 `.md`（纯文字）或 `.mdx`（要嵌组件），文件名即 URL：
-
-```yaml
----
-title: "标题"
-date: 2026-11-15
-category: "笔记"
-excerpt: "列表页用的一句话摘要。"
-issue: 3        # 期号，决定排序与 ISSUE #003
-tags: ["NeRF"]
-draft: false    # true 则不上线
-updated: false  # true 会在卡片和文章头挂「持续更新」角标
-wide: false     # true 则通栏，数据密集的文章用
----
-```
-
-数据类文章不手抄表格，直接引组件：
-
-```mdx
-import McuTimeline from "../../components/McuTimeline.astro";
-
-<McuTimeline />
-```
-
-这样 `mcu.ts` / `legacy.ts` 改一处，文章自动跟着变。
-
-## 改视觉
-
-颜色集中在 `src/styles/global.css` 的 `@theme`：
-
-```css
---color-paper: #efe6d0;   /* 新闻纸 */
---color-ink: #14110e;     /* 油墨黑 */
---color-hero: #e0242a;    /* 漫威红 */
---color-reactor: #f2a900; /* 反应堆金 */
---color-cape: #1e3a6e;    /* 披风蓝 */
---color-hud: #23e0ff;     /* HUD 青 */
-```
-
-> 组件类（`.panel` `.balloon` `.caption` 等）都在 `@layer components` 里，所以 Tailwind 的 `bg-*` / `text-*` 工具类可以正常覆盖它们。别把这些类挪出图层，否则会盖掉工具类。
-
-## 多元宇宙地图
-
-`/archive` 是地图页，每个宇宙一套**版式主题**（不是同一张图换色）：
-
-| 宇宙 | 主题 | 视觉 |
-| --- | --- | --- |
-| Earth-616 主宇宙 | `tactical` | 深蓝战术网格 + 扫描光圈，军事 HUD |
-| Earth-199999 MCU | `orbital` | 轨道视角、星空、地球弧线 |
-| Earth-838 光照会 | `blueprint` | 米白蓝图、细线雷达环、金色强调环 |
-| Earth-10005 X 战警 | `atlas` | 泛黄手绘图、等高线、罗盘刻度 |
-
-加一个宇宙 = 往 `src/data/multiverse.ts` 的 `universes` 里加一条（`theme` 选上面四个之一，`landmarks` 里的 `x`/`y` 是地图内百分比坐标）。标签页是纯 CSS 的 radio 切换，没有 JS。
-
-## 旧笔记备份
-
-原来的 6 篇技术笔记（NeRF、3D 分割、3D AIGC、计组复习等）已从站点移除，**本地备份在 `_backup/notes/`**，该目录已加入 `.gitignore`，不会上传。想恢复某篇，把文件挪回 `src/content/blog/` 并补一个 `issue` 号即可。
-
-## 部署到 GitHub Pages
-
-仓库带 `.github/workflows/deploy.yml`（`withastro/action` + `deploy-pages`）。
-
-1. 推到仓库，Settings → Pages → Source 选 **GitHub Actions**
-2. 推到 `master` 自动构建
-
-`astro.config.mjs` 的 `site` 已设为 `https://thj2333.github.io`。若部署到子路径，需同时设 `base` 并改站内绝对链接。
+详细用法见 `jarvis/README.md`。
