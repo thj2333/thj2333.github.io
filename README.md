@@ -193,6 +193,6 @@ import McuTimeline from "../../components/McuTimeline.astro";
 仓库带 `.github/workflows/deploy.yml`（`withastro/action` + `deploy-pages`）。
 
 1. 推到仓库，Settings → Pages → Source 选 **GitHub Actions**
-2. 推到 `main` 自动构建
+2. 推到 `master` 自动构建
 
 `astro.config.mjs` 的 `site` 已设为 `https://thj2333.github.io`。若部署到子路径，需同时设 `base` 并改站内绝对链接。
