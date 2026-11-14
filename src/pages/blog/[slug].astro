@@ -20,6 +20,8 @@ const fmt = (d: Date) =>
 
 const issueNo = (n: number) => String(n).padStart(3, "0");
 const toc = headings.filter((h) => h.depth === 2);
+// 通栏的数据文章不需要侧边目录（会把表格压窄）
+const showToc = toc.length > 1 && !post.data.wide;
 ---
 
 <Base period={post.data.title} description={post.data.excerpt}>
@@ -71,7 +73,7 @@ const toc = headings.filter((h) => h.depth === 2);
     </header>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-12">
-      {toc.length > 1 && (
+      {showToc && (
         <aside class="lg:col-span-3">
           <div class="sticky top-32 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] p-4 shadow-[5px_5px_0_0_var(--color-ink)]">
             <p class="label mb-2 border-b-2 border-[var(--color-ink)] pb-1.5">
@@ -99,7 +101,7 @@ const toc = headings.filter((h) => h.depth === 2);
       <div
         class:list={[
           "prose-616",
-          toc.length > 1
+          showToc
             ? "lg:col-span-9"
             : post.data.wide
               ? "lg:col-span-12"

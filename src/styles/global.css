@@ -621,6 +621,25 @@
   font-weight: 800;
 }
 
+@media (max-width: 700px) {
+  .prose-616 table {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 0.72rem;
+  }
+
+  .prose-616 table th:first-child,
+  .prose-616 table td:first-child {
+    width: 30%;
+  }
+
+  .prose-616 table th,
+  .prose-616 table td {
+    padding: 0.3rem 0.4rem;
+    overflow-wrap: anywhere;
+  }
+}
+
 .prose-616 hr {
   border: 0;
   height: 6px;
