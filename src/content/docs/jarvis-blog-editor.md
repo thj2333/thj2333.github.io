@@ -45,8 +45,13 @@ npm run dev           # 另开一个终端：保存后站点自动热更新
 
 1. 自动探测 `127.0.0.1:4321`，没跑就显示「启动开发服务器」按钮（在仓库里执行 `npm run dev -- --port 4321`）
 2. 按当前文件推断路由：`src/pages/archive/index.astro` → `/archive/`
-3. 保存后自动刷新（等 600ms 让 HMR 先更新）
-4. 切到 Markdown 文件时自动换成「渲染」模式，双击段落仍能定位源码行
+3. **双击页面里的文字/按钮，右边跳到对应源码行**
+4. 保存后自动刷新（等 600ms 让 HMR 先更新）
+5. 切到 Markdown 文件时自动换成「渲染」模式，双击段落仍能定位源码行
+
+定位是怎么做到的：dev 模式下 `src/integrations/jarvis-locate.mjs` 会给每个页面注入一小段脚本，双击时把元素的可见文字和当前路由发给 Jarvis；Jarvis 按「页面 → 组件 → 布局 → 其他」的顺序搜索这个文本，命中就打开文件并跳行。所以它靠文字匹配——纯图标会用父级文字，变量拼出来的文字可能对不上。
+
+要在别的 Astro 仓库也得到这个能力，把 `jarvis/integrations/astro-jarvis-locate.mjs` 复制过去并在 `astro.config.mjs` 里注册即可。
 
 ## 三、能改哪些文件
 
