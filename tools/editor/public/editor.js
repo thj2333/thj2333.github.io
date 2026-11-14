@@ -643,15 +643,20 @@ window.addEventListener("message", (e) => {
       U.pushHint.innerHTML = "还没有远端仓库：先点「设置远端」填一个 GitHub 仓库地址。";
       return;
     }
+    if (g.remoteDefault && g.remoteDefault !== g.branch) {
+      const url = actionsUrl(g);
+      U.pushHint.innerHTML =
+        `远端默认分支是 <b>${esc(g.remoteDefault)}</b>，本地是 <b>${esc(g.branch)}</b>：推送会新建一个分支，不会覆盖旧站。` +
+        `要在 GitHub 里把默认分支和 Pages 源切到 <b>${esc(g.branch)}</b> 才会生效` +
+        (url ? `（<a href="${url}" target="_blank" rel="noopener">查看 Actions ↗</a>）` : "") +
+        "。";
+      return;
+    }
     if (g.ahead > 0) {
       const url = actionsUrl(g);
       U.pushHint.innerHTML = `有 ${g.ahead} 个提交待推送。推送后 GitHub Actions 会自动构建并部署${
         url ? `（<a href="${url}" target="_blank" rel="noopener">查看 Actions ↗</a>）` : ""
       }。`;
-      return;
-    }
-    if (g.remoteDefault && g.remoteDefault !== g.branch) {
-      U.pushHint.innerHTML = `远端默认分支是 <b>${esc(g.remoteDefault)}</b>，推送会新建 <b>${esc(g.branch)}</b> 分支，不会覆盖旧站。切默认分支和 Pages 源到新分支后才会生效。`;
       return;
     }
     U.pushHint.innerHTML = "本地与远端一致。改完东西记得先「构建校验」，再提交、推送。";
