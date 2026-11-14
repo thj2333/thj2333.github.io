@@ -1,10 +1,15 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getCollection } from "astro:content";
+import { categories, categoryMap } from "../../data/categories";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.issue - a.data.issue,
 );
+
+const byCat = Object.fromEntries(
+  categories.map((c) => [c.id, posts.filter((p) => p.data.cat === c.id)]),
+) as Record<string, typeof posts>;
 
 const fmt = (d: Date) =>
   `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
@@ -12,7 +17,7 @@ const fmt = (d: Date) =>
 const issueNo = (n: number) => String(n).padStart(3, "0");
 ---
 
-<Base period="博客" description="地球 616 的博客：随笔、笔记与踩坑记录。">
+<Base period="博客" description="地球 616 的博客：电影档案、实用工具与研究笔记。">
   <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
     <div
       class="pointer-events-none absolute -right-6 -top-10 h-44 w-44 halftone dot-fade text-[var(--color-ink)] opacity-[0.1]"
@@ -24,55 +29,446 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
       随笔<span class="text-[var(--color-hero)]">与</span>笔记
     </h1>
     <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      技术、论文与工具清单。目前 {posts.length} 期，其中 AI 工具那份会一直更新。
+      {posts.length} 期，分 {categories.length} 类。分类和文章的先后顺序都能拖，拖动结果存在本地。
     </p>
   </header>
 
-  <div class="mt-8 grid gap-5 md:grid-cols-2">
-    {
-      posts.map((p, i) => (
-        <a
-          href={`/blog/${p.id}`}
-          class={`panel panel-hover group flex flex-col overflow-hidden rise d${i + 2}`}
-        >
-          <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-reactor)] px-3 py-1.5">
-            <span class="font-mono text-[0.6rem] font-bold tracking-[0.16em]">
-              ISSUE #{issueNo(p.data.issue)}
+  <!-- ═══ 分类轨 ═══ -->
+  <div class="mt-6 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] shadow-[6px_6px_0_0_var(--color-ink)]">
+    <div class="flex items-center justify-between border-b-2 border-[var(--color-ink)] px-3 py-1.5">
+      <span class="label">分类 / CATEGORIES · 拖动排序</span>
+      <button
+        type="button"
+        data-reset
+        class="label border-2 border-[var(--color-ink)] bg-[var(--color-paper-hi)] px-2 py-0.5 hover:bg-[var(--color-reactor)]"
+      >
+        重置顺序
+      </button>
+    </div>
+
+    <div class="cat-list" data-cat-list data-horizontal="true">
+      {
+        categories.map((c, i) => (
+          <div
+            class="cat-chip"
+            data-cat={c.id}
+            draggable="true"
+            tabindex="0"
+            role="button"
+            aria-label={`${c.cn} ${c.en}，拖动或按 Alt+方向键调整顺序`}
+            style={`--accent:${c.accent}`}
+          >
+            <span class="cat-grip" aria-hidden="true">⠿</span>
+            <span class="cat-code" data-code>
+              {String(i + 1).padStart(2, "0")}
             </span>
-            <span class="font-mono text-[0.6rem] tracking-[0.1em]">
-              {fmt(p.data.date)}
+            <span class="cat-name">
+              <span class="cat-cn">{c.cn}</span>
+              <span class="cat-en">{c.en}</span>
+            </span>
+            <span class="cat-count">
+              {byCat[c.id].length > 0
+                ? `${byCat[c.id].length} 期`
+                : "建设中"}
             </span>
           </div>
-          <div class="flex flex-1 flex-col p-5">
-            <h2 class="display text-2xl leading-tight transition-colors group-hover:text-[var(--color-hero)]">
-              {p.data.title}
-            </h2>
-            <p class="mt-3 flex-1 text-[0.84rem] leading-relaxed text-[var(--color-ink-soft)]">
-              {p.data.excerpt}
-            </p>
-            <div class="mt-4 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-3">
-              <span class="flex items-center gap-1.5">
-                <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
-                  {p.data.category}
-                </span>
-                {p.data.updated && (
-                  <span class="flex items-center gap-1 border-2 border-[var(--color-ink)] bg-[var(--color-hero)] px-1.5 py-0.5 font-mono text-[0.5rem] font-bold text-[var(--color-paper-hi)]">
-                    <span class="h-1 w-1 bg-[var(--color-paper-hi)] blink" />
-                    持续更新
-                  </span>
-                )}
-              </span>
-              <span class="font-mono text-[0.62rem] tracking-[0.14em] opacity-0 transition-opacity group-hover:opacity-100">
-                阅读 →
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- ═══ 分区 ═══ -->
+  <div class="cat-sections" data-cat-sections>
+    {
+      categories.map((c) => {
+        const list = byCat[c.id];
+        return (
+          <section class="cat-section" data-cat-section={c.id}>
+            <div class="mb-3 flex flex-wrap items-center gap-3">
+              <span
+                class="h-3 w-3 shrink-0 rotate-45 border border-[var(--color-ink)]"
+                style={`background:${c.accent}`}
+                aria-hidden="true"
+              />
+              <h2 class="display text-2xl">{c.cn}</h2>
+              <span class="label text-[var(--color-ink-soft)]">{c.en}</span>
+              <div class="h-[2px] flex-1 bg-[var(--color-ink)]/25" />
+              <span class="font-mono text-[0.6rem] text-[var(--color-ink-soft)]">
+                {list.length > 0 ? `${list.length} 期` : "WIP"}
               </span>
             </div>
-          </div>
-        </a>
-      ))
+            <p class="mb-3 text-[0.76rem] text-[var(--color-ink-soft)]">{c.desc}</p>
+
+            {list.length > 0 ? (
+              <div class="post-grid" data-post-grid>
+                {list.map((p) => (
+                  <a
+                    href={`/blog/${p.id}`}
+                    class="panel panel-hover post-card group flex flex-col overflow-hidden"
+                    data-post={p.id}
+                    draggable="true"
+                  >
+                    <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-reactor)] px-3 py-1.5">
+                      <span class="font-mono text-[0.6rem] font-bold tracking-[0.16em]">
+                        ISSUE #{issueNo(p.data.issue)}
+                      </span>
+                      <span class="font-mono text-[0.6rem] tracking-[0.1em]">
+                        {fmt(p.data.date)}
+                      </span>
+                    </div>
+                    <div class="flex flex-1 flex-col p-4">
+                      <h3 class="display text-xl leading-tight transition-colors group-hover:text-[var(--color-hero)]">
+                        {p.data.title}
+                      </h3>
+                      <p class="mt-2 flex-1 text-[0.8rem] leading-relaxed text-[var(--color-ink-soft)]">
+                        {p.data.excerpt}
+                      </p>
+                      <div class="mt-3 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-2.5">
+                        <span class="flex items-center gap-1.5">
+                          <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
+                            {categoryMap[p.data.cat].cn}
+                          </span>
+                          {p.data.updated && (
+                            <span class="border-2 border-[var(--color-ink)] bg-[var(--color-hero)] px-1.5 py-0.5 font-mono text-[0.46rem] font-bold text-[var(--color-paper-hi)]">
+                              持续更新
+                            </span>
+                          )}
+                        </span>
+                        <span class="font-mono text-[0.6rem] tracking-[0.14em] opacity-0 transition-opacity group-hover:opacity-100">
+                          阅读 →
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div class="wip-panel">
+                <span class="caption">建设中 / UNDER CONSTRUCTION</span>
+                <p class="mt-2 text-[0.82rem] leading-relaxed text-[var(--color-ink-soft)]">
+                  这一类还没写。等有好东西了再填。
+                </p>
+              </div>
+            )}
+          </section>
+        );
+      })
     }
   </div>
 
-  <p class="mt-8 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]">
-    // 旧笔记已下架，本地保留备份。
+  <p class="mt-8 font-mono text-[0.6rem] leading-relaxed tracking-[0.1em] text-[var(--color-ink-soft)]">
+    // 拖动分类或文章可调整顺序，结果只存在你这台设备的 localStorage。点「重置顺序」恢复默认。
   </p>
 </Base>
+
+<style>
+  .cat-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .cat-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 3px solid var(--color-ink);
+    background: var(--color-paper-hi);
+    padding: 0.4rem 0.6rem;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 3px 3px 0 0 var(--color-ink);
+    transition:
+      transform 0.12s ease,
+      opacity 0.12s ease;
+    border-left-width: 8px;
+    border-left-color: var(--accent);
+  }
+
+  .cat-chip:hover {
+    transform: translateY(-2px);
+  }
+
+  .cat-chip:focus-visible {
+    outline: 3px solid var(--color-hero);
+    outline-offset: 2px;
+  }
+
+  .cat-chip.dragging {
+    opacity: 0.35;
+    outline: 2px dashed var(--color-ink);
+    cursor: grabbing;
+  }
+
+  .cat-grip {
+    font-size: 0.8rem;
+    opacity: 0.4;
+    letter-spacing: -2px;
+  }
+
+  .cat-code {
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    opacity: 0.55;
+  }
+
+  .cat-name {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .cat-cn {
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .cat-en {
+    font-family: var(--font-mono);
+    font-size: 0.46rem;
+    letter-spacing: 0.12em;
+    opacity: 0.5;
+  }
+
+  .cat-count {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    padding: 1px 4px;
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper-lo);
+    white-space: nowrap;
+  }
+
+  .cat-name {
+    min-width: 0;
+  }
+
+  .cat-sections {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+  }
+
+  .post-grid {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  @media (min-width: 640px) {
+    .post-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .post-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .post-card {
+    cursor: grab;
+  }
+
+  .post-card.dragging {
+    opacity: 0.4;
+    outline: 3px dashed var(--color-ink);
+  }
+
+  .wip-panel {
+    border: 3px dashed var(--color-ink);
+    background: repeating-linear-gradient(
+      135deg,
+      rgba(20, 17, 14, 0.035) 0 10px,
+      transparent 10px 20px
+    );
+    padding: 1rem 1.1rem;
+  }
+</style>
+
+<script>
+  const CAT_KEY = "e616:catOrder:v1";
+  const POST_KEY = "e616:postOrder:v1";
+
+  const catList = document.querySelector<HTMLElement>("[data-cat-list]");
+  const sectionsWrap = document.querySelector<HTMLElement>(
+    "[data-cat-sections]",
+  );
+
+  const read = <T,>(key: string, fallback: T): T => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const write = (key: string, value: unknown) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* 隐身模式等场景直接忽略 */
+    }
+  };
+
+  const renumber = () => {
+    catList
+      ?.querySelectorAll<HTMLElement>("[data-cat]")
+      .forEach((el, i) => {
+        const code = el.querySelector("[data-code]");
+        if (code) code.textContent = String(i + 1).padStart(2, "0");
+      });
+  };
+
+  const syncSectionsToChips = () => {
+    if (!catList || !sectionsWrap) return;
+    catList.querySelectorAll<HTMLElement>("[data-cat]").forEach((chip) => {
+      const id = chip.dataset.cat;
+      const sec = sectionsWrap.querySelector<HTMLElement>(
+        `[data-cat-section="${id}"]`,
+      );
+      if (sec) sectionsWrap.appendChild(sec);
+    });
+    renumber();
+  };
+
+  const saveCatOrder = () => {
+    if (!catList) return;
+    const order = [...catList.querySelectorAll<HTMLElement>("[data-cat]")].map(
+      (el) => el.dataset.cat,
+    );
+    write(CAT_KEY, order);
+  };
+
+  const savePostOrder = () => {
+    if (!sectionsWrap) return;
+    const map: Record<string, string[]> = {};
+    sectionsWrap
+      .querySelectorAll<HTMLElement>("[data-cat-section]")
+      .forEach((sec) => {
+        const id = sec.dataset.catSection!;
+        const ids = [...sec.querySelectorAll<HTMLElement>("[data-post]")].map(
+          (el) => el.dataset.post!,
+        );
+        if (ids.length) map[id] = ids;
+      });
+    write(POST_KEY, map);
+  };
+
+  /** 通用拖拽：在容器内实时换位，松手后回调 */
+  const enableDrag = (
+    container: HTMLElement,
+    itemSel: string,
+    horizontal: boolean,
+    onEnd: () => void,
+  ) => {
+    let dragging: HTMLElement | null = null;
+
+    container.addEventListener("dragstart", (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>(itemSel);
+      if (!el) return;
+      dragging = el;
+      el.classList.add("dragging");
+      e.dataTransfer?.setData("text/plain", "");
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    });
+
+    container.addEventListener("dragover", (e) => {
+      if (!dragging) return;
+      const over = (e.target as HTMLElement).closest<HTMLElement>(itemSel);
+      if (!over || over === dragging) return;
+      if (over.parentElement !== dragging.parentElement) return;
+      e.preventDefault();
+      const r = over.getBoundingClientRect();
+      const after = horizontal
+        ? e.clientX - r.left > r.width / 2
+        : e.clientY - r.top > r.height / 2;
+      over.parentElement!.insertBefore(
+        dragging,
+        after ? over.nextSibling : over,
+      );
+    });
+
+    container.addEventListener("drop", (e) => e.preventDefault());
+
+    container.addEventListener("dragend", () => {
+      if (!dragging) return;
+      dragging.classList.remove("dragging");
+      dragging = null;
+      onEnd();
+    });
+
+    // 键盘：Alt + 方向键
+    container.addEventListener("keydown", (e) => {
+      if (!e.altKey) return;
+      const el = (e.target as HTMLElement).closest<HTMLElement>(itemSel);
+      if (!el) return;
+      const prev =
+        e.key === "ArrowLeft" || e.key === "ArrowUp"
+          ? el.previousElementSibling
+          : e.key === "ArrowRight" || e.key === "ArrowDown"
+            ? el.nextElementSibling
+            : null;
+      if (!prev) return;
+      e.preventDefault();
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        el.parentElement!.insertBefore(el, prev);
+      } else {
+        el.parentElement!.insertBefore(prev, el.nextSibling);
+      }
+      (el as HTMLElement).focus();
+      onEnd();
+    });
+  };
+
+  // ---- 应用已保存的顺序 ----
+  if (catList) {
+    const saved = read<string[]>(CAT_KEY, []);
+    saved.forEach((id) => {
+      const chip = catList.querySelector<HTMLElement>(`[data-cat="${id}"]`);
+      if (chip) catList.appendChild(chip);
+    });
+    syncSectionsToChips();
+
+    const postOrder = read<Record<string, string[]>>(POST_KEY, {});
+    Object.entries(postOrder).forEach(([cat, ids]) => {
+      const grid = sectionsWrap?.querySelector<HTMLElement>(
+        `[data-cat-section="${cat}"] [data-post-grid]`,
+      );
+      if (!grid) return;
+      ids.forEach((id) => {
+        const card = grid.querySelector<HTMLElement>(`[data-post="${id}"]`);
+        if (card) grid.appendChild(card);
+      });
+    });
+  }
+
+  // ---- 拖拽绑定 ----
+  if (catList) {
+    enableDrag(catList, "[data-cat]", true, () => {
+      syncSectionsToChips();
+      saveCatOrder();
+    });
+  }
+
+  sectionsWrap
+    ?.querySelectorAll<HTMLElement>("[data-post-grid]")
+    .forEach((grid) => {
+      enableDrag(grid, "[data-post]", false, savePostOrder);
+    });
+
+  // ---- 重置 ----
+  document.querySelector("[data-reset]")?.addEventListener("click", () => {
+    try {
+      localStorage.removeItem(CAT_KEY);
+      localStorage.removeItem(POST_KEY);
+    } catch {
+      /* noop */
+    }
+    location.reload();
+  });
+</script>

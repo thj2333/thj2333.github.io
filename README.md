@@ -8,7 +8,7 @@
 | --- | --- |
 | `/` | 封面：本期企划 + 终端目录 + 最新博客 + 工具柜速览 + 六颗宝石 |
 | `/archive` | **多元宇宙地图**：616 主宇宙 / 199999 MCU / 838 光照会 / 10005 X 战警，四套地图版式与 18 处地标 |
-| `/blog` | 博客列表（5 期：AI 榜单站点、AI 工具全景、MCU 时间线、英雄名册、改版公告） |
+| `/blog` | 博客列表：6 个分类分区，**分类与文章均可拖动排序** |
 | `/blog/<slug>` | 单篇博客，带本期内页目录与上下期 |
 | `/armory` | 工具柜：智能助手 / 无限宝石 / 3D 生成工具（占位，未实现） |
 | `/dossier` | ~~人物档案~~ 已下线 |
@@ -42,6 +42,7 @@ npm run preview  # 预览构建结果
 | MCU 电影年表 / 剧集 / 英雄名册 | `src/data/mcu.ts` |
 | 非 MCU 别册（福克斯、索尼、早期单片、旧剧集） | `src/data/legacy.ts` |
 | 多元宇宙地图（宇宙、地标坐标、主题） | `src/data/multiverse.ts` |
+| 博客分类（中英文名、状态、主色） | `src/data/categories.ts` |
 | 智能助手 / 无限宝石 / 3D 工具 | `src/data/tools.ts` |
 | 博客文章 | `src/content/blog/*.md` |
 | 站点名、刊号、导航 | `src/components/Masthead.astro` |
@@ -50,6 +51,25 @@ npm run preview  # 预览构建结果
 | 配色与印刷元件 | `src/styles/global.css` |
 
 电影、剧集与英雄都是纯数据，加一条就往里追一条，页面自动渲染。电影在 `films`，剧集在 `series`（`kind` 分真人/动画/特辑），英雄卡的颜色来自 `accent` 字段。非 MCU 作品按组放在 `legacy.ts` 的 `legacyGroups` 里，每组自带厂牌、色标与说明。
+
+## 博客分类
+
+六类，中英文名在 `src/data/categories.ts` 里定义：
+
+| id | 中文 | English | 状态 |
+| --- | --- | --- | --- |
+| `cinema` | IP 电影 | IP CINEMA | 已上线 |
+| `tools` | 实用工具 | TOOLKIT | 已上线 |
+| `research` | 技术研究 | RESEARCH | 建设中 |
+| `music` | 音乐鉴赏 | SOUNDTRACK | 建设中 |
+| `travel` | 旅游美食 | WANDER | 建设中 |
+| `whatif` | 假如 | WHAT IF | 建设中 |
+
+文章在 frontmatter 里用 `cat: "tools"` 归类；`status: "wip"` 的分类会渲染成虚线「建设中」占位块。
+
+**拖动排序**：分类轨和文章卡片都支持拖拽（HTML5 DnD），拖动后会同步重排分区、写进 `localStorage`（`e616:catOrder:v1` / `e616:postOrder:v1`），刷新仍保留；「重置顺序」按钮清空并还原默认。键盘可用 `Alt + 方向键` 移动当前项。
+
+> 排序只存在本地，不写回文件——所以它是「读者自己的视图」，不会影响其他访客。
 
 ## 写一篇博客
 

@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { assistants, stones, gen3d } from "../data/tools";
 import { universes, totalLandmarks } from "../data/multiverse";
+import { categoryMap } from "../data/categories";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.issue - a.data.issue,
@@ -221,7 +222,7 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
             <div class="mt-4 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-3">
               <span class="flex items-center gap-1.5">
                 <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
-                  {p.data.category}
+                  {categoryMap[p.data.cat].cn}
                 </span>
                 {p.data.updated && (
                   <span class="border-2 border-[var(--color-ink)] bg-[var(--color-hero)] px-1.5 py-0.5 font-mono text-[0.48rem] font-bold text-[var(--color-paper-hi)]">

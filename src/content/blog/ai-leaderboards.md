@@ -1,7 +1,7 @@
 ---
 title: "AI 榜单站点与工具目录"
 date: 2026-11-15
-category: "清单"
+cat: "tools"
 excerpt: "按模态分好的榜单网站清单：LLM、图像、视频、3D、语音、代码 Agent，外加收录 AI 工具的目录站。持续更新。"
 issue: 5
 tags: ["AI", "榜单", "导航", "持续更新"]

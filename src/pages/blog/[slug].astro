@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getCollection, render } from "astro:content";
+import { categoryMap } from "../../data/categories";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -43,7 +44,7 @@ const showToc = toc.length > 1 && !post.data.wide;
 
       <div class="flex flex-wrap items-center gap-2.5">
         <span class="sticker text-[0.7rem]">ISSUE #{issueNo(post.data.issue)}</span>
-        <span class="caption">{post.data.category}</span>
+        <span class="caption">{categoryMap[post.data.cat].cn}</span>
         {post.data.updated && (
           <span class="flex items-center gap-1.5 border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] px-2 py-0.5 font-mono text-[0.6rem] font-bold text-[var(--color-paper-hi)] shadow-[2px_2px_0_0_var(--color-ink)]">
             <span class="h-1.5 w-1.5 bg-[var(--color-paper-hi)] blink" />
