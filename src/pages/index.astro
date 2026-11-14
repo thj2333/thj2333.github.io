@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { assistants, stones, gen3d } from "../data/tools";
 import { films, heroes, releasedCount, series } from "../data/mcu";
+import { legacyTotal } from "../data/legacy";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.issue - a.data.issue,
@@ -60,6 +61,8 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
           <span>剧集 {series.length}</span>
           <span aria-hidden="true">·</span>
           <span>英雄 {heroes.length}</span>
+          <span aria-hidden="true">·</span>
+          <span>别册 {legacyTotal}</span>
           <span aria-hidden="true">·</span>
           <span>工具 03 组</span>
         </div>

@@ -11,6 +11,12 @@ import {
   seriesOfKind,
   seriesOnline,
 } from "../../data/mcu";
+import {
+  legacyGroups,
+  legacyTotal,
+  legacyFilms,
+  legacySeries,
+} from "../../data/legacy";
 
 const pad = (n: number) => String(n).padStart(3, "0");
 
@@ -42,7 +48,7 @@ const phaseTone: Record<number, string> = {
       MCU <span class="text-[var(--color-hero)]">档案</span>
     </h1>
     <p class="mt-3 max-w-2xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      按本刊设定，这里是 616 隔壁那条分支——地球-199999。收录全部院线电影、Disney+ 剧集与特辑，以及主要英雄名册。
+      按本刊设定，这里是 616 隔壁那条分支——地球-199999。收录全部院线电影、Disney+ 剧集与特辑、主要英雄名册，并在末尾附一册「非 MCU」作品。
     </p>
     <div class="mt-4 flex flex-wrap items-center gap-2">
       <span class="caption">影片 {films.length}</span>
@@ -50,6 +56,12 @@ const phaseTone: Record<number, string> = {
       <span class="caption">英雄 {heroes.length}</span>
       <span class="caption">已上映 {releasedCount}</span>
       <span class="caption">待映 {upcomingCount}</span>
+      <span class="caption">别册 {legacyTotal}</span>
+      <a
+        href="#legacy"
+        class="border-[3px] border-[var(--color-ink)] bg-[var(--color-ink)] px-2 py-0.5 font-mono text-[0.68rem] font-bold tracking-[0.12em] text-[var(--color-paper-hi)] shadow-[3px_3px_0_0_var(--color-ink)] hover:bg-[var(--color-hero)]"
+        >非 MCU 别册 ↓</a
+      >
     </div>
   </header>
 
@@ -258,6 +270,78 @@ const phaseTone: Record<number, string> = {
               {h.team}
             </div>
           </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═══ 别册：非 MCU ═══ -->
+  <section id="legacy" class="mt-16 scroll-mt-28">
+    <div class="mb-5 flex flex-wrap items-center gap-4">
+      <h2 class="display text-3xl">非 MCU 别册</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">ELSEWHERE / {pad(legacyTotal)}</span>
+    </div>
+
+    <div class="mb-7 border-l-4 border-[var(--color-hero)] bg-[var(--color-paper-lo)] py-3 pl-4 pr-3">
+      <p class="text-sm leading-relaxed text-[var(--color-ink-soft)]">
+        这些作品都不在地球-199999 里：有的属于福克斯、索尼各自的宇宙，有的出自漫威电视的旧年。
+        放在这一册只作参照，不算本刊正史。共 {legacyTotal} 部（电影 {legacyFilms}、剧集 {legacySeries}）。
+      </p>
+    </div>
+
+    <div class="space-y-9">
+      {
+        legacyGroups.map((g, gi) => (
+          <div class={`rise d${Math.min(gi + 1, 6)}`}>
+            <div class="mb-1.5 flex flex-wrap items-center gap-3">
+              <span
+                class="h-3 w-3 shrink-0 rotate-45 border border-[var(--color-ink)]"
+                style={`background:${g.accent}`}
+                aria-hidden="true"
+              />
+              <h3 class="text-[0.98rem] font-extrabold">{g.label}</h3>
+              <span class="label text-[var(--color-ink-soft)]">{g.en}</span>
+              <div class="h-[2px] flex-1 bg-[var(--color-ink)]/20" />
+              <span class="font-mono text-[0.6rem] text-[var(--color-ink-soft)]">
+                {g.items.length}
+              </span>
+            </div>
+            <p class="mb-2 text-[0.72rem] text-[var(--color-ink-soft)]/80">{g.note}</p>
+
+            <ul>
+              {g.items.map((it, i) => (
+                <li class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-[7px] transition-colors hover:border-[var(--color-ink)] sm:gap-4">
+                  <span class="w-11 shrink-0 font-mono text-[0.66rem] tracking-[0.08em] text-[var(--color-ink-soft)]">
+                    {it.year}
+                  </span>
+                  <span class="w-5 shrink-0 font-mono text-[0.52rem] text-[var(--color-ink)]/30">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[0.9rem] font-bold leading-snug transition-colors group-hover:text-[var(--color-hero)]">
+                      {it.cn}
+                    </span>
+                    <span class="block truncate font-mono text-[0.6rem] tracking-[0.04em] text-[var(--color-ink-soft)]/70">
+                      {it.en}
+                    </span>
+                  </span>
+                  {it.note && (
+                    <span class="shrink-0 border border-[var(--color-ink)]/45 bg-[var(--color-paper-lo)] px-1 py-0.5 font-mono text-[0.5rem]">
+                      {it.note}
+                    </span>
+                  )}
+                  <span class="w-14 shrink-0 text-right font-mono text-[0.55rem] tracking-[0.06em] text-[var(--color-ink)]/40">
+                    {it.kind === "剧集"
+                      ? `${it.seasons} 季`
+                      : it.out
+                        ? "已公映"
+                        : "未公映"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))
       }
     </div>
