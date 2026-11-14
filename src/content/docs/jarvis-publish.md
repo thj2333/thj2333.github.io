@@ -46,7 +46,34 @@ npm run editor        # http://127.0.0.1:4400
 
 > 只接受 GitHub 地址（https 或 ssh），其他 URL 一律拒绝。
 
-## 四、日常流程
+## 四、首次上线（GitHub Pages）
+
+推到远端只是第一步，要让 Pages 真的发出去，还要在 GitHub 上做三件事：
+
+1. **仓库转公开** —— Settings → General → 最下方 Danger Zone → Change visibility → Public
+   （私有仓库用 Pages 需要 Pro；免费账号必须公开）
+2. **开启 Pages** —— Settings → Pages → Build and deployment → Source 选 **GitHub Actions**
+3. **重跑工作流** —— Actions 标签页 → 上次失败的 “Deploy to GitHub Pages” → Re-run all jobs
+
+成功后站点在 `https://<用户名>.github.io/`。
+
+> 本项目仓库 `thj2333.github.io` 就是用户站点仓库，所以根路径直接是主页；换成普通仓库时会部署到 `/<仓库名>/`，需要在 `astro.config.mjs` 里补 `base`。
+
+### 替换旧站的正确姿势
+
+旧站和本站历史不相干，直接推会被拒。安全的做法是先把旧站存档再覆盖：
+
+```bash
+# 1. 旧站存成 legacy 分支
+git push origin origin/master:refs/heads/legacy
+
+# 2. 新站覆盖 master（--force 会改写历史）
+git push --force origin master
+```
+
+之后远端保留 `legacy`（旧站）与 `master`（新站）两条分支，随时能回头看。
+
+## 五、日常流程
 
 1. **构建校验** —— 跑 `npm run build`，通过才继续。失败会显示日志尾部。
 2. **写提交信息** —— 一句话说清改了什么。
@@ -56,13 +83,13 @@ npm run editor        # http://127.0.0.1:4400
 
 > 建议顺序：先构建，再提交。构建失败时提交也能撤回，但没必要给自己添麻烦。
 
-## 五、状态怎么看
+## 六、状态怎么看
 
 - **领先 N**：本地有 N 个提交还没推上去。只有这时「推送」按钮才可用。
 - **落后 N**：远端有新提交（比如你在别处改过）。此时先 `git pull`，否则推送会被拒。
 - **提交身份**：读取仓库的 `user.name` / `user.email`；没配置时用内置默认值，并在后面标注「（默认）」。
 
-## 六、常见问题
+## 七、常见问题
 
 **推送失败 `rejected (fetch first)`？** 远端有你本地没有的提交。到终端跑 `git pull --rebase` 再回来推。
 
@@ -72,7 +99,7 @@ npm run editor        # http://127.0.0.1:4400
 
 **能撤销提交吗？** 这个工具只做「加、提交、推」，不做回滚。撤销请到终端用 `git reset`。
 
-## 七、边界
+## 八、边界
 
 - 只操作当前仓库的 `origin`，不碰其他 remote。
 - 提交信息不能为空；没有改动时拒绝提交。
