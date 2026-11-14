@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { assistants, stones, gen3d } from "../data/tools";
-import { films, heroes, releasedCount } from "../data/mcu";
+import { films, heroes, releasedCount, series } from "../data/mcu";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.issue - a.data.issue,
@@ -56,6 +56,8 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
           class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]"
         >
           <span>影片 {films.length}</span>
+          <span aria-hidden="true">·</span>
+          <span>剧集 {series.length}</span>
           <span aria-hidden="true">·</span>
           <span>英雄 {heroes.length}</span>
           <span aria-hidden="true">·</span>
@@ -117,6 +119,7 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
         >
           <p>&gt; mount /archive ... ok</p>
           <p>&nbsp;&nbsp;films {films.length} · heroes {heroes.length}</p>
+          <p>&nbsp;&nbsp;series {series.length} · specials 3</p>
           <p>&gt; mount /blog ... ok ({posts.length} issues)</p>
           <p>&gt; mount /armory ... 03 modules</p>
           <p>&gt; gem array ... 6/6 LOCKED</p>
@@ -169,7 +172,7 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
             </div>
             <div class="font-mono text-[0.55rem] leading-relaxed tracking-[0.14em] text-[var(--color-hud)]/45">
               <p>EARTH-199999 / SECTOR</p>
-              <p>FILMS {films.length} · IN CINEMA {releasedCount}</p>
+              <p>FILMS {films.length} · SERIES {series.length}</p>
               <p class="text-[var(--color-hud)]/70">NO ANOMALY</p>
             </div>
           </div>

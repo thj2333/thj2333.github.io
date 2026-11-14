@@ -1,6 +1,6 @@
 /**
  * MCU 档案数据
- * 只收院线电影；剧集与特辑不在此表。
+ * 院线电影见 films；Disney+ 剧集与特辑见 series。
  */
 
 export interface Film {
@@ -234,6 +234,207 @@ export const films: Film[] = [
     out: false,
   },
 ];
+
+/* ---------------- 剧集与特辑 ---------------- */
+
+export type SeriesKind = "真人" | "动画" | "特辑";
+
+export interface Series {
+  year: number;
+  cn: string;
+  en: string;
+  /** 季数；特辑为 undefined */
+  season?: number;
+  kind: SeriesKind;
+  phase: number;
+  out: boolean;
+}
+
+export const series: Series[] = [
+  // ── 真人剧集 ──
+  { year: 2021, cn: "旺达幻视", en: "WandaVision", season: 1, kind: "真人", phase: 4, out: true },
+  {
+    year: 2021,
+    cn: "猎鹰与冬兵",
+    en: "The Falcon and the Winter Soldier",
+    season: 1,
+    kind: "真人",
+    phase: 4,
+    out: true,
+  },
+  { year: 2021, cn: "洛基", en: "Loki", season: 2, kind: "真人", phase: 4, out: true },
+  { year: 2021, cn: "鹰眼", en: "Hawkeye", season: 1, kind: "真人", phase: 4, out: true },
+  {
+    year: 2022,
+    cn: "月光骑士",
+    en: "Moon Knight",
+    season: 1,
+    kind: "真人",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2022,
+    cn: "惊奇少女",
+    en: "Ms. Marvel",
+    season: 1,
+    kind: "真人",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2022,
+    cn: "女浩克",
+    en: "She-Hulk: Attorney at Law",
+    season: 1,
+    kind: "真人",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2023,
+    cn: "秘密入侵",
+    en: "Secret Invasion",
+    season: 1,
+    kind: "真人",
+    phase: 5,
+    out: true,
+  },
+  { year: 2024, cn: "回声", en: "Echo", season: 1, kind: "真人", phase: 5, out: true },
+  {
+    year: 2024,
+    cn: "女巫阿加莎",
+    en: "Agatha All Along",
+    season: 1,
+    kind: "真人",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2025,
+    cn: "夜魔侠：重生",
+    en: "Daredevil: Born Again",
+    season: 2,
+    kind: "真人",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2025,
+    cn: "钢铁之心",
+    en: "Ironheart",
+    season: 1,
+    kind: "真人",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2026,
+    cn: "奇迹人",
+    en: "Wonder Man",
+    season: 1,
+    kind: "真人",
+    phase: 6,
+    out: true,
+  },
+  {
+    year: 2026,
+    cn: "幻视探索",
+    en: "Vision Quest",
+    season: 1,
+    kind: "真人",
+    phase: 6,
+    out: true,
+  },
+
+  // ── 动画剧集 ──
+  {
+    year: 2021,
+    cn: "假如…？",
+    en: "What If...?",
+    season: 3,
+    kind: "动画",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2022,
+    cn: "我是格鲁特",
+    en: "I Am Groot",
+    season: 2,
+    kind: "动画",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2024,
+    cn: "X 战警 '97",
+    en: "X-Men '97",
+    season: 2,
+    kind: "动画",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2025,
+    cn: "你的友好邻居蜘蛛侠",
+    en: "Your Friendly Neighborhood Spider-Man",
+    season: 2,
+    kind: "动画",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2025,
+    cn: "瓦坎达之眼",
+    en: "Eyes of Wakanda",
+    season: 1,
+    kind: "动画",
+    phase: 5,
+    out: true,
+  },
+  {
+    year: 2025,
+    cn: "漫威丧尸",
+    en: "Marvel Zombies",
+    season: 1,
+    kind: "动画",
+    phase: 5,
+    out: true,
+  },
+
+  // ── 特辑 ──
+  {
+    year: 2022,
+    cn: "暗夜狼人",
+    en: "Werewolf by Night",
+    kind: "特辑",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2022,
+    cn: "银河护卫队：假日特别篇",
+    en: "The Guardians of the Galaxy Holiday Special",
+    kind: "特辑",
+    phase: 4,
+    out: true,
+  },
+  {
+    year: 2026,
+    cn: "惩罚者：最后一杀",
+    en: "The Punisher: One Last Kill",
+    kind: "特辑",
+    phase: 6,
+    out: false,
+  },
+];
+
+export const kinds: SeriesKind[] = ["真人", "动画", "特辑"];
+
+export const seriesOfKind = (k: SeriesKind) => series.filter((s) => s.kind === k);
+
+export const seriesOnline = series.filter((s) => s.out).length;
 
 /* ---------------- 英雄 ---------------- */
 
