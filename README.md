@@ -26,6 +26,25 @@
 - 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文走系统 PingFang / Noto Sans SC
 - 内容：Astro Content Collections（Markdown + zod schema）
 
+## 本地编辑器（写博客用）
+
+```bash
+npm run editor     # → http://127.0.0.1:4400
+```
+
+左边实时预览、右边 Markdown 源码，专为改文章设计：
+
+- **双击左边任意段落 / 表格行** → 右边自动跳到对应源码行并选中整块
+- 光标在右边移动时，左边会虚线高亮对应的块（双向定位）
+- 实时渲染（防抖 220ms），预览顶部自动拼出文章头（期号 / 分类 / 标题）
+- `⌘S` / `Ctrl+S` 保存，或点右上角按钮；未保存时状态栏变黄，关页面会拦一下
+- 中间的分隔条可以拖动调整左右比例，键盘聚焦后 `←/→` 也能调
+- 直接读写 `src/content/blog/*.md(x)`；同时开着 `npm run dev` 的话，保存后会热更新
+
+实现：`tools/editor/`（Node 原生 http + markdown-it，无前端框架），只监听 `127.0.0.1`，写入路径限定在 `src/content/blog`。预览样式复用 `dist/_astro` 里构建出的 CSS，所以**先 `npm run build` 一次**，预览才是真实排版；没构建时会退化成内置的简易样式。
+
+行号映射的做法：markdown-it 的 token 自带 `map`（行区间），渲染时把它塞成 `data-line` / `data-endline`，再按 frontmatter 行数做偏移，双击时从 DOM 反查源码行。
+
 ## 命令
 
 ```bash

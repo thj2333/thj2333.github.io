@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>616 · Blog Editor</title>
+    <link rel="stylesheet" href="/editor.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="brand">
+        <span class="mark">616</span>
+        <span class="name">BLOG EDITOR</span>
+      </div>
+
+      <select id="post-select" aria-label="选择文章"></select>
+
+      <div class="meta" id="meta"></div>
+
+      <div class="actions">
+        <span id="status" class="status">未加载</span>
+        <button id="save" type="button" class="btn btn-primary">保存 <kbd>⌘S</kbd></button>
+      </div>
+    </header>
+
+    <main class="split" id="split">
+      <section class="pane preview-pane">
+        <div class="pane-head">
+          <span>实时预览</span>
+          <span class="hint">双击任意段落 → 跳转到源码对应行</span>
+        </div>
+        <iframe id="preview" title="预览" src="/preview.html"></iframe>
+      </section>
+
+      <div class="divider" id="divider" role="separator" aria-orientation="vertical" tabindex="0">
+        <span class="grip" aria-hidden="true"></span>
+      </div>
+
+      <section class="pane editor-pane">
+        <div class="pane-head">
+          <span>Markdown 源码</span>
+          <span class="hint" id="count"></span>
+        </div>
+        <div class="code">
+          <pre class="gutter" id="gutter" aria-hidden="true"></pre>
+          <textarea id="code" spellcheck="false" autocomplete="off"></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script src="/editor.js"></script>
+  </body>
+</html>

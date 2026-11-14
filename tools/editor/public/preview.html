@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>preview</title>
+    <link rel="stylesheet" href="/site.css" />
+    <style>
+      /* dist 没构建时的降级样式；有 site.css 时会被覆盖 */
+      :root {
+        --color-paper: #efe6d0;
+        --color-ink: #14110e;
+        --color-ink-soft: #3a332b;
+        --color-hero: #e0242a;
+        --color-reactor: #f2a900;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--color-paper, #efe6d0);
+        color: var(--color-ink, #14110e);
+        font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+        padding: 28px 30px 80px;
+      }
+
+      .wrap {
+        max-width: 780px;
+        margin: 0 auto;
+      }
+
+      /* 降级排版：只有在 site.css 缺失时才明显 */
+      .fallback h1,
+      .fallback h2 {
+        font-weight: 800;
+        border-bottom: 3px solid var(--color-ink);
+        padding-bottom: 0.3rem;
+      }
+
+      .ed-head {
+        margin-bottom: 28px;
+      }
+
+      .ed-kicker {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-ink-soft, #3a332b);
+        margin-bottom: 10px;
+      }
+
+      .ed-badge {
+        background: var(--color-hero, #e0242a);
+        color: #fff;
+        padding: 1px 6px;
+        letter-spacing: 0.06em;
+      }
+
+      .ed-title {
+        margin: 0;
+        font-size: 2.4rem;
+        line-height: 1.05;
+        font-weight: 900;
+        color: var(--color-ink, #14110e);
+      }
+
+      .ed-rule {
+        height: 3px;
+        background: var(--color-ink, #14110e);
+        margin-top: 16px;
+      }
+
+      .src-hl {
+        outline: 3px dashed var(--color-hero, #e0242a);
+        outline-offset: 4px;
+        background: rgba(224, 36, 42, 0.05);
+        transition: outline-color 0.15s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="prose-616 fallback" id="root"></div>
+    </div>
+
+    <script>
+      const root = document.getElementById("root");
+      let lastLine = null;
+
+      function highlight(line) {
+        lastLine = line;
+        document
+          .querySelectorAll(".src-hl")
+          .forEach((el) => el.classList.remove("src-hl"));
+        if (!line) return;
+
+        const els = [...document.querySelectorAll("[data-line]")];
+        let best = null;
+        for (const el of els) {
+          const start = Number(el.dataset.line);
+          const end = Number(el.dataset.endline || start + 1);
+          if (line >= start && line < end) {
+            if (!best || end - start < Number(best.dataset.endline || 0) - Number(best.dataset.line)) {
+              best = el;
+            }
+          }
+        }
+        if (best) {
+          best.classList.add("src-hl");
+          best.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+      }
+
+      window.addEventListener("message", (e) => {
+        const d = e.data || {};
+        if (d.type === "html") {
+          root.innerHTML = d.html;
+          if (lastLine) highlight(lastLine);
+        }
+        if (d.type === "highlight") highlight(d.line);
+      });
+
+      document.addEventListener("dblclick", (e) => {
+        const el = e.target.closest("[data-line]");
+        if (!el) return;
+        e.preventDefault();
+        parent.postMessage(
+          {
+            type: "locate",
+            line: Number(el.dataset.line),
+            endline: Number(el.dataset.endline || el.dataset.line),
+          },
+          "*",
+        );
+      });
+
+      // 让外层知道样式是否真的加载到了
+      parent.postMessage({ type: "ready" }, "*");
+    </script>
+  </body>
+</html>
