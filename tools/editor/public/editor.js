@@ -527,3 +527,226 @@ window.addEventListener("message", (e) => {
     setStatus(`初始化失败：${err.message}`, "dirty");
   }
 })();
+
+/* ---------------- 发布（Jarvis 功能 02） ---------------- */
+
+(() => {
+  const id = (x) => document.getElementById(x);
+  const U = {
+    publish: id("publish"),
+    modeEdit: id("mode-edit"),
+    modePublish: id("mode-publish"),
+    repoLine: id("repo-line"),
+    remoteEdit: id("remote-edit"),
+    remoteUrl: id("remote-url"),
+    remoteSave: id("remote-save"),
+    refresh: id("git-refresh"),
+    setRemote: id("git-set-remote"),
+    build: id("git-build"),
+    commit: id("git-commit"),
+    push: id("git-push"),
+    pushHint: id("push-hint"),
+    changeCount: id("change-count"),
+    changeList: id("change-list"),
+    commitMsg: id("commit-msg"),
+    commitLog: id("commit-log"),
+    buildCard: id("build-card"),
+    buildOut: id("build-out"),
+    split: document.getElementById("split"),
+  };
+
+  let git = null;
+
+  function setPublishMode(on) {
+    document.body.classList.toggle("mode-publish", on);
+    U.split.hidden = on;
+    U.publish.hidden = !on;
+    U.modeEdit.classList.toggle("active", !on);
+    U.modePublish.classList.toggle("active", on);
+    U.modeEdit.setAttribute("aria-selected", String(!on));
+    U.modePublish.setAttribute("aria-selected", String(on));
+    if (on) refreshGit();
+  }
+
+  const esc = (s) =>
+    String(s).replace(/[&<>"]/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+    );
+
+  function actionsUrl(g) {
+    return g.remoteOwner && g.remoteRepo
+      ? `https://github.com/${g.remoteOwner}/${g.remoteRepo}/actions`
+      : null;
+  }
+
+  function renderRepo(g) {
+    const remote = g.remote
+      ? `<b>${esc(g.remote.replace("https://github.com/", "gh:"))}</b>`
+      : `<span class="warn">未设置</span>`;
+    const link = actionsUrl(g)
+      ? ` · <a href="${actionsUrl(g)}" target="_blank" rel="noopener" style="color:var(--gold)">Actions ↗</a>`
+      : "";
+    U.repoLine.innerHTML = `
+      <span>分支 <b>${esc(g.branch)}</b></span>
+      <span>远端 ${remote}${link}</span>
+      <span>领先 <b>${g.ahead}</b> · 落后 <b>${g.behind}</b></span>
+      <span>提交身份 <b>${esc(g.identity.name)}</b>${g.identity.fromRepo ? "" : "（默认）"}</span>
+    `;
+  }
+
+  function renderChanges(g) {
+    U.changeCount.textContent = String(g.files.length);
+    if (!g.files.length) {
+      U.changeList.innerHTML = `<li class="empty">工作区干净，没有待提交的改动。</li>`;
+      return;
+    }
+    U.changeList.innerHTML = g.files
+      .map((f) => {
+        const code = f.code === "??" ? "A" : f.code.replace(/[^MADRC]/g, "") || "M";
+        const stat = f.stat
+          ? `<span class="stat"><b class="add">+${f.stat.add}</b> <b class="del">-${f.stat.del}</b></span>`
+          : "";
+        return `<li>
+          <span class="code ${code}">${code}</span>
+          <span class="path" title="${esc(f.path)}">${esc(f.path)}</span>
+          ${stat}
+        </li>`;
+      })
+      .join("");
+  }
+
+  function renderLog(g) {
+    U.commitLog.innerHTML = g.log.length
+      ? g.log
+          .map(
+            (c) =>
+              `<li><span class="hash">${esc(c.hash)}</span><span class="sub" title="${esc(c.subject)}">${esc(c.subject)}</span><span class="date">${esc(c.date)}</span></li>`,
+          )
+          .join("")
+      : `<li class="empty">还没有提交。</li>`;
+  }
+
+  function renderHint(g) {
+    if (!g.initialized) {
+      U.pushHint.textContent = "当前目录不是 git 仓库。";
+      return;
+    }
+    if (!g.remote) {
+      U.pushHint.innerHTML = "还没有远端仓库：先点「设置远端」填一个 GitHub 仓库地址。";
+      return;
+    }
+    if (g.ahead > 0) {
+      const url = actionsUrl(g);
+      U.pushHint.innerHTML = `有 ${g.ahead} 个提交待推送。推送后 GitHub Actions 会自动构建并部署${
+        url ? `（<a href="${url}" target="_blank" rel="noopener">查看 Actions ↗</a>）` : ""
+      }。`;
+      return;
+    }
+    U.pushHint.innerHTML = "本地与远端一致。改完东西记得先「构建校验」，再提交、推送。";
+  }
+
+  async function refreshGit() {
+    try {
+      const res = await fetch("/api/git/status");
+      git = await res.json();
+      renderRepo(git);
+      renderChanges(git);
+      renderLog(git);
+      renderHint(git);
+      U.push.disabled = !git.remote || git.ahead === 0;
+    } catch (err) {
+      U.repoLine.innerHTML = `<span class="warn">读取失败：${esc(err.message)}</span>`;
+    }
+  }
+
+  async function post(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  U.modeEdit.addEventListener("click", () => setPublishMode(false));
+  U.modePublish.addEventListener("click", () => setPublishMode(true));
+  U.refresh.addEventListener("click", refreshGit);
+
+  U.setRemote.addEventListener("click", () => {
+    U.remoteEdit.hidden = !U.remoteEdit.hidden;
+    if (!U.remoteEdit.hidden) {
+      U.remoteUrl.value = git?.remote || "";
+      U.remoteUrl.focus();
+    }
+  });
+
+  U.remoteSave.addEventListener("click", async () => {
+    try {
+      await post("/api/git/remote", { url: U.remoteUrl.value.trim() });
+      U.remoteEdit.hidden = true;
+      await refreshGit();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  U.commit.addEventListener("click", async () => {
+    const message = U.commitMsg.value.trim();
+    if (!message) {
+      U.commitMsg.focus();
+      return;
+    }
+    U.commit.disabled = true;
+    try {
+      await post("/api/git/commit", { message });
+      U.commitMsg.value = "";
+      await refreshGit();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      U.commit.disabled = false;
+    }
+  });
+
+  U.push.addEventListener("click", async () => {
+    U.push.disabled = true;
+    try {
+      const data = await post("/api/git/push");
+      U.buildCard.hidden = false;
+      U.buildOut.textContent = data.output || "已推送。";
+      await refreshGit();
+    } catch (err) {
+      U.buildCard.hidden = false;
+      U.buildOut.textContent = "推送失败：\n" + err.message;
+    } finally {
+      U.push.disabled = false;
+    }
+  });
+
+  U.build.addEventListener("click", async () => {
+    U.build.disabled = true;
+    U.buildCard.hidden = false;
+    U.buildOut.textContent = "构建中…（首次可能要十几秒）";
+    try {
+      const data = await post("/api/git/build");
+      U.buildOut.textContent =
+        (data.ok ? "✓ 构建通过\n\n" : "✗ 构建失败\n\n") + (data.output || "");
+      U.buildOut.style.color = data.ok ? "#a9b6c8" : "#f87171";
+    } catch (err) {
+      U.buildOut.textContent = "构建失败：" + err.message;
+      U.buildOut.style.color = "#f87171";
+    } finally {
+      U.build.disabled = false;
+    }
+  });
+
+  // ⌘⇧E / ⌘⇧P 切换模式
+  window.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      setPublishMode(!document.body.classList.contains("mode-publish"));
+    }
+  });
+})();

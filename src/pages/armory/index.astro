@@ -3,9 +3,16 @@ import Base from "../../layouts/Base.astro";
 import { assistants, stones, gen3d } from "../../data/tools";
 import { getCollection, render } from "astro:content";
 
-const docEntries = await getCollection("docs");
-const jarvisEntry = docEntries.find((d) => d.data.tool === "Jarvis");
-const JarvisManual = jarvisEntry ? (await render(jarvisEntry)).Content : null;
+const docEntries = (await getCollection("docs"))
+  .filter((d) => d.data.tool === "Jarvis")
+  .sort((a, b) => a.data.order - b.data.order);
+
+const jarvisDocs = await Promise.all(
+  docEntries.map(async (entry) => ({
+    ...entry.data,
+    Content: (await render(entry)).Content,
+  })),
+);
 ---
 
 <Base period="工具柜" description="地球 616 工具柜：智能助手、无限宝石与 3D 生成工具。">
@@ -20,7 +27,7 @@ const JarvisManual = jarvisEntry ? (await render(jarvisEntry)).Content : null;
       武器<span class="text-[var(--color-hero)]">库</span>
     </h1>
     <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      三个模块，全部是占位。目前只有 3D 生成那一栏能点出去，其余还在图纸上。
+      三个模块。Jarvis 的站点编辑器与发布流程已经能用，其余还在图纸上。
     </p>
     <p class="mt-2 font-mono text-[0.62rem] tracking-[0.18em] text-[var(--color-ink-soft)]">
       MODULES: 03 · STATUS: NOT BUILT
@@ -81,21 +88,25 @@ const JarvisManual = jarvisEntry ? (await render(jarvisEntry)).Content : null;
                 {a.persona}
               </p>
 
-              {a.name === "Jarvis" && JarvisManual && (
-                <details class="manual">
-                  <summary>
-                    <span>
-                      功能 01 · 站点编辑器
-                      <em>{jarvisEntry?.data.summary}</em>
-                    </span>
-                  </summary>
-                  <div class="manual-body">
-                    <div class="manual-inner prose-616">
-                      <JarvisManual />
-                    </div>
-                  </div>
-                </details>
-              )}
+              {a.name === "Jarvis" &&
+                jarvisDocs.map((doc, di) => {
+                  const Manual = doc.Content;
+                  return (
+                    <details class="manual">
+                      <summary>
+                        <span>
+                          功能 {String(di + 1).padStart(2, "0")} · {doc.title}
+                          <em>{doc.summary}</em>
+                        </span>
+                      </summary>
+                      <div class="manual-body">
+                        <div class="manual-inner prose-616">
+                          <Manual />
+                        </div>
+                      </div>
+                    </details>
+                  );
+                })}
             </div>
           </article>
         ))

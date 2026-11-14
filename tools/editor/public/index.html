@@ -16,6 +16,15 @@
         </span>
       </div>
 
+      <div class="modes" role="tablist" aria-label="模式">
+        <button id="mode-edit" class="mode active" type="button" role="tab" aria-selected="true">
+          编辑器
+        </button>
+        <button id="mode-publish" class="mode" type="button" role="tab" aria-selected="false">
+          发布
+        </button>
+      </div>
+
       <button id="toggle-tree" class="btn btn-icon" type="button" title="显示 / 隐藏文件树">
         ☰
       </button>
@@ -68,6 +77,58 @@
           <textarea id="code" spellcheck="false" autocomplete="off"></textarea>
         </div>
       </section>
+    </main>
+
+    <main class="publish" id="publish" hidden>
+      <div class="pub-cols">
+        <section class="pub-card">
+          <h2>仓库</h2>
+          <div class="repo-line" id="repo-line">读取中…</div>
+          <div class="remote-edit" id="remote-edit" hidden>
+            <input
+              id="remote-url"
+              type="text"
+              placeholder="https://github.com/user/repo.git"
+              autocomplete="off"
+            />
+            <button id="remote-save" class="btn btn-primary" type="button">保存远端</button>
+          </div>
+          <div class="pub-actions">
+            <button id="git-refresh" class="btn" type="button">刷新状态</button>
+            <button id="git-set-remote" class="btn" type="button">设置远端</button>
+            <button id="git-build" class="btn" type="button">构建校验</button>
+          </div>
+        </section>
+
+        <section class="pub-card">
+          <h2>待提交改动 <span id="change-count" class="count-pill">0</span></h2>
+          <ul id="change-list" class="change-list"></ul>
+        </section>
+
+        <section class="pub-card">
+          <h2>提交信息</h2>
+          <textarea
+            id="commit-msg"
+            placeholder="feat: 描述这次改动"
+            spellcheck="false"
+          ></textarea>
+          <div class="pub-actions">
+            <button id="git-commit" class="btn btn-primary" type="button">提交</button>
+            <button id="git-push" class="btn" type="button">推送并部署</button>
+          </div>
+          <p class="pub-hint" id="push-hint"></p>
+        </section>
+
+        <section class="pub-card">
+          <h2>最近提交</h2>
+          <ol id="commit-log" class="commit-log"></ol>
+        </section>
+
+        <section class="pub-card wide" id="build-card" hidden>
+          <h2>构建输出</h2>
+          <pre id="build-out" class="build-out"></pre>
+        </section>
+      </div>
     </main>
 
     <div class="palette" id="palette" hidden>

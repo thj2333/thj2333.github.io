@@ -12,6 +12,9 @@
 
 import { createServer } from "node:http";
 import { readFile, writeFile, readdir, stat } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import MarkdownIt from "markdown-it";
@@ -63,6 +66,7 @@ const DENY_NAMES = new Set([
 ]);
 
 const MAX_BYTES = 1024 * 1024;
+const exec = promisify(execFile);
 
 /* ---------------- Markdown ---------------- */
 
@@ -199,6 +203,122 @@ async function fileTree() {
   return out;
 }
 
+/* ---------------- Git ---------------- */
+
+async function git(args, opts = {}) {
+  const { stdout, stderr } = await exec("git", args, {
+    cwd: ROOT,
+    maxBuffer: 16 * 1024 * 1024,
+    ...opts,
+  });
+  return (stdout || stderr || "").trim();
+}
+
+/** 不做 trim 的版本：porcelain 输出首行带前导空格，trim 会把状态位吃掉 */
+async function gitRaw(args, opts = {}) {
+  try {
+    const { stdout } = await exec("git", args, {
+      cwd: ROOT,
+      maxBuffer: 16 * 1024 * 1024,
+      ...opts,
+    });
+    return stdout;
+  } catch {
+    return "";
+  }
+}
+
+async function gitTry(args, opts = {}) {
+  try {
+    return await git(args, opts);
+  } catch {
+    return "";
+  }
+}
+
+/** 提交身份：优先用仓库配置，没有就退回默认值 */
+async function gitIdentity() {
+  const name = await gitTry(["config", "user.name"]);
+  const email = await gitTry(["config", "user.email"]);
+  return {
+    name: name || "thj2333",
+    email: email || "thj2333@users.noreply.github.com",
+    fromRepo: Boolean(name && email),
+  };
+}
+
+async function gitStatus() {
+  const branch = (await gitTry(["rev-parse", "--abbrev-ref", "HEAD"])) || "—";
+  const remote = await gitTry(["remote", "get-url", "origin"]);
+  const identity = await gitIdentity();
+
+  const real = branch !== "—";
+  let ahead = 0;
+  let behind = 0;
+  if (real && remote) {
+    const counts = await gitTry([
+      "rev-list",
+      "--left-right",
+      "--count",
+      `origin/${branch}...HEAD`,
+    ]);
+    if (counts) {
+      const [b, a] = counts.split(/\s+/).map(Number);
+      behind = b || 0;
+      ahead = a || 0;
+    }
+  }
+
+  let files = [];
+  if (real) {
+    const porcelain = await gitRaw(["status", "--porcelain=v1", "-uall"]);
+    const numstat = await gitTry(["diff", "--numstat", "HEAD"]);
+    const stats = new Map();
+    for (const line of numstat.split("\n").filter(Boolean)) {
+      const [add, del, file] = line.split("\t");
+      if (file) stats.set(file, { add: Number(add) || 0, del: Number(del) || 0 });
+    }
+    files = porcelain
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const code = line.slice(0, 2).trim();
+        const p = line.slice(3).trim();
+        const cleanPath = p.includes(" -> ") ? p.split(" -> ").pop() : p;
+        return {
+          code,
+          path: cleanPath,
+          staged: line[0] !== " " && line[0] !== "?",
+          stat: stats.get(cleanPath) || null,
+        };
+      });
+  }
+
+  const log = real
+    ? (await gitTry(["log", "-5", "--pretty=format:%h|%s|%ad", "--date=short"]))
+        .split("\n")
+        .filter(Boolean)
+        .map((l) => {
+          const [hash, subject, date] = l.split("|");
+          return { hash, subject, date };
+        })
+    : [];
+
+  return {
+    root: ROOT,
+    branch,
+    remote,
+    remoteOwner: remote.match(/github\.com[:/]([^/]+)\/([^/.]+)/)?.[1] || null,
+    remoteRepo: remote.match(/github\.com[:/]([^/]+)\/([^/.]+)/)?.[2] || null,
+    ahead,
+    behind,
+    files,
+    log,
+    identity,
+    initialized: real,
+  };
+}
+
 /* ---------------- HTTP 工具 ---------------- */
 
 const MIME = {
@@ -301,6 +421,106 @@ const server = createServer(async (req, res) => {
         siteCss: Boolean(await siteCss()),
         files: (await fileTree()).length,
       });
+    }
+
+    /* ---- Git ---- */
+
+    if (pathname === "/api/git/status" && req.method === "GET") {
+      return json(res, 200, await gitStatus());
+    }
+
+    if (pathname === "/api/git/commit" && req.method === "POST") {
+      const body = JSON.parse(await readBody(req));
+      const message = String(body.message || "").trim();
+      if (!message) return json(res, 400, { error: "提交信息不能为空" });
+
+      const status = await gitStatus();
+      if (!status.initialized) {
+        return json(res, 400, { error: "当前目录不是 git 仓库" });
+      }
+      if (!status.files.length) {
+        return json(res, 400, { error: "没有可提交的改动" });
+      }
+
+      const id = await gitIdentity();
+      await git(["add", "-A"]);
+      const args = [
+        "-c",
+        `user.name=${id.name}`,
+        "-c",
+        `user.email=${id.email}`,
+        "commit",
+        "-m",
+        message,
+      ];
+      const out = await git(args);
+      console.log(`[jarvis] commit: ${message}`);
+      return json(res, 200, { ok: true, output: out, status: await gitStatus() });
+    }
+
+    if (pathname === "/api/git/push" && req.method === "POST") {
+      const status = await gitStatus();
+      if (!status.remote) {
+        return json(res, 400, { error: "还没有配置远程仓库" });
+      }
+      const out = await exec(
+        "git",
+        ["push", "-u", "origin", status.branch],
+        { cwd: ROOT, maxBuffer: 16 * 1024 * 1024 },
+      ).then(
+        (r) => (r.stdout + r.stderr).trim(),
+        (e) => {
+          throw new Error((e.stderr || e.message || "").trim() || "push 失败");
+        },
+      );
+      console.log(`[jarvis] push → ${status.branch}`);
+      return json(res, 200, { ok: true, output: out, status: await gitStatus() });
+    }
+
+    if (pathname === "/api/git/remote" && req.method === "POST") {
+      const body = JSON.parse(await readBody(req));
+      const url = String(body.url || "").trim();
+      if (!/^(https:\/\/github\.com\/|git@github\.com:)[\w.\-]+\/[\w.\-]+\.git$/.test(url)) {
+        return json(res, 400, {
+          error: "只接受 GitHub 仓库地址，例如 https://github.com/user/repo.git",
+        });
+      }
+      const existing = await gitTry(["remote", "get-url", "origin"]);
+      if (existing) {
+        await git(["remote", "set-url", "origin", url]);
+      } else {
+        await git(["remote", "add", "origin", url]);
+      }
+      console.log(`[jarvis] remote origin → ${url}`);
+      return json(res, 200, { ok: true, status: await gitStatus() });
+    }
+
+    if (pathname === "/api/git/build" && req.method === "POST") {
+      const cache =
+        process.env.npm_config_cache ||
+        (existsSync(path.resolve(ROOT, "../.npm-cache"))
+          ? path.resolve(ROOT, "../.npm-cache")
+          : undefined);
+      const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: "1" };
+      if (cache) env.npm_config_cache = cache;
+      try {
+        const { stdout, stderr } = await exec("npm", ["run", "build"], {
+          cwd: ROOT,
+          env,
+          maxBuffer: 32 * 1024 * 1024,
+          timeout: 240000,
+        });
+        const output = (stdout + "\n" + stderr).trim();
+        console.log("[jarvis] build ok");
+        return json(res, 200, { ok: true, output: output.split("\n").slice(-40).join("\n") });
+      } catch (e) {
+        const output = ((e.stdout || "") + "\n" + (e.stderr || "")).trim();
+        console.log("[jarvis] build failed");
+        return json(res, 200, {
+          ok: false,
+          output: (output || e.message || "构建失败").split("\n").slice(-40).join("\n"),
+        });
+      }
     }
 
     /* 静态 */

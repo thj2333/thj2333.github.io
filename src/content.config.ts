@@ -26,6 +26,8 @@ const docs = defineCollection({
     /** 关联的工具名，例如 "Jarvis" */
     tool: z.string(),
     summary: z.string().default(""),
+    /** 同一工具下的功能顺序 */
+    order: z.number().default(0),
     updated: z.string().optional(),
   }),
 });
