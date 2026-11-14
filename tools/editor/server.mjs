@@ -253,19 +253,25 @@ async function gitStatus() {
   const identity = await gitIdentity();
 
   const real = branch !== "—";
+  const remoteDefault = (await gitTry([
+    "symbolic-ref",
+    "--short",
+    "refs/remotes/origin/HEAD",
+  ])).replace(/^origin\//, "");
+
   let ahead = 0;
   let behind = 0;
   if (real && remote) {
-    const counts = await gitTry([
-      "rev-list",
-      "--left-right",
-      "--count",
-      `origin/${branch}...HEAD`,
-    ]);
-    if (counts) {
-      const [b, a] = counts.split(/\s+/).map(Number);
-      behind = b || 0;
-      ahead = a || 0;
+    // 优先比对同名远端分支，否则退回远端默认分支
+    const sameName = await gitTry(["rev-parse", "--verify", "--quiet", `origin/${branch}`]);
+    const cmpRef = sameName ? `origin/${branch}` : remoteDefault ? `origin/${remoteDefault}` : "";
+    if (cmpRef) {
+      const counts = await gitTry(["rev-list", "--left-right", "--count", `${cmpRef}...HEAD`]);
+      if (counts) {
+        const [b, a] = counts.split(/\s+/).map(Number);
+        behind = b || 0;
+        ahead = a || 0;
+      }
     }
   }
 
@@ -307,6 +313,7 @@ async function gitStatus() {
   return {
     root: ROOT,
     branch,
+    remoteDefault,
     remote,
     remoteOwner: remote.match(/github\.com[:/]([^/]+)\/([^/.]+)/)?.[1] || null,
     remoteRepo: remote.match(/github\.com[:/]([^/]+)\/([^/.]+)/)?.[2] || null,
@@ -479,12 +486,16 @@ const server = createServer(async (req, res) => {
 
     if (pathname === "/api/git/remote" && req.method === "POST") {
       const body = JSON.parse(await readBody(req));
-      const url = String(body.url || "").trim();
-      if (!/^(https:\/\/github\.com\/|git@github\.com:)[\w.\-]+\/[\w.\-]+\.git$/.test(url)) {
+      let url = String(body.url || "").trim();
+      // 允许结尾的 / 与可选的 .git
+      url = url.replace(/\/+$/, "");
+      if (!/^(https:\/\/github\.com\/|git@github\.com:)[\w.\-]+\/[\w.\-]+?(\.git)?$/.test(url)) {
         return json(res, 400, {
-          error: "只接受 GitHub 仓库地址，例如 https://github.com/user/repo.git",
+          error: "只接受 GitHub 仓库地址，例如 https://github.com/user/repo（.git 可省略）",
         });
       }
+      // https 地址补上 .git，省得后面 push 时再校验
+      if (url.startsWith("https://") && !url.endsWith(".git")) url += ".git";
       const existing = await gitTry(["remote", "get-url", "origin"]);
       if (existing) {
         await git(["remote", "set-url", "origin", url]);

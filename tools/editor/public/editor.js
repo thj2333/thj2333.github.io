@@ -540,6 +540,7 @@ window.addEventListener("message", (e) => {
     remoteEdit: id("remote-edit"),
     remoteUrl: id("remote-url"),
     remoteSave: id("remote-save"),
+    remoteMsg: id("remote-msg"),
     refresh: id("git-refresh"),
     setRemote: id("git-set-remote"),
     build: id("git-build"),
@@ -556,6 +557,13 @@ window.addEventListener("message", (e) => {
   };
 
   let git = null;
+
+  function remoteMsg(text, kind = "") {
+    U.remoteMsg.hidden = !text;
+    U.remoteMsg.textContent = text;
+    U.remoteMsg.style.color =
+      kind === "error" ? "#f87171" : kind === "ok" ? "#4ade80" : "";
+  }
 
   function setPublishMode(on) {
     document.body.classList.toggle("mode-publish", on);
@@ -589,7 +597,7 @@ window.addEventListener("message", (e) => {
     U.repoLine.innerHTML = `
       <span>分支 <b>${esc(g.branch)}</b></span>
       <span>远端 ${remote}${link}</span>
-      <span>领先 <b>${g.ahead}</b> · 落后 <b>${g.behind}</b></span>
+      <span>领先 <b>${g.ahead}</b> · 落后 <b>${g.behind}</b>${g.remoteDefault && g.remoteDefault !== g.branch ? `（对比 origin/${esc(g.remoteDefault)}）` : ""}</span>
       <span>提交身份 <b>${esc(g.identity.name)}</b>${g.identity.fromRepo ? "" : "（默认）"}</span>
     `;
   }
@@ -642,6 +650,10 @@ window.addEventListener("message", (e) => {
       }。`;
       return;
     }
+    if (g.remoteDefault && g.remoteDefault !== g.branch) {
+      U.pushHint.innerHTML = `远端默认分支是 <b>${esc(g.remoteDefault)}</b>，推送会新建 <b>${esc(g.branch)}</b> 分支，不会覆盖旧站。切默认分支和 Pages 源到新分支后才会生效。`;
+      return;
+    }
     U.pushHint.innerHTML = "本地与远端一致。改完东西记得先「构建校验」，再提交、推送。";
   }
 
@@ -654,6 +666,8 @@ window.addEventListener("message", (e) => {
       renderLog(git);
       renderHint(git);
       U.push.disabled = !git.remote || git.ahead === 0;
+      // 没有远端时直接把输入框展开，省得用户找不到
+      if (!git.remote) U.remoteEdit.hidden = false;
     } catch (err) {
       U.repoLine.innerHTML = `<span class="warn">读取失败：${esc(err.message)}</span>`;
     }
@@ -683,12 +697,19 @@ window.addEventListener("message", (e) => {
   });
 
   U.remoteSave.addEventListener("click", async () => {
+    const url = U.remoteUrl.value.trim();
+    if (!url) {
+      remoteMsg("请填写仓库地址", "error");
+      return;
+    }
+    remoteMsg("保存中…");
     try {
-      await post("/api/git/remote", { url: U.remoteUrl.value.trim() });
+      const data = await post("/api/git/remote", { url });
       U.remoteEdit.hidden = true;
+      remoteMsg(`已保存远端：${data.status.remote}`, "ok");
       await refreshGit();
     } catch (err) {
-      alert(err.message);
+      remoteMsg(err.message, "error");
     }
   });
 
@@ -704,7 +725,7 @@ window.addEventListener("message", (e) => {
       U.commitMsg.value = "";
       await refreshGit();
     } catch (err) {
-      alert(err.message);
+      remoteMsg(`提交失败：${err.message}`, "error");
     } finally {
       U.commit.disabled = false;
     }
