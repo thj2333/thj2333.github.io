@@ -26,46 +26,28 @@
 - 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文走系统 PingFang / Noto Sans SC
 - 内容：Astro Content Collections（Markdown + zod schema）
 
-## Jarvis · 站点控制台（本地）
+## Jarvis（独立应用）
+
+本地 git 控制台不在这个仓库里，已经拆成独立应用：
+
+```
+/Users/thj/Desktop/Code/jarvis
+```
 
 ```bash
-npm run editor     # → http://127.0.0.1:4400
+cd ../jarvis
+npm start          # http://127.0.0.1:4400（或双击 start.command）
 ```
 
-Jarvis 负责编程与建站，站点控制台是它的功能 01（编辑）与功能 02（发布）：在浏览器里改整个仓库，然后把它推上线。
+它管三件事，仓库可随时切换，配置存在 `jarvis/data/config.json`：
 
-**两个模式**（顶栏切换，或 `⌘⇧E`）：
-
-| 模式 | 作用 |
+| 功能 | 作用 |
 | --- | --- |
-| 编辑器 | 文件树 + 预览 + 源码，改本地文件 |
-| 发布 | 构建校验 → 提交 → 推送，交给 GitHub Actions 上线 |
+| 编辑器 | 文件树 + Markdown 实时预览（双击定位源码行） |
+| 发布 | 构建校验 → 提交 → 推送，交给 Actions |
+| 同步 | 设置远端、拉取（`--ff-only`）、推送；可扫描并登记本地所有 git 仓库 |
 
-```
-┌──────────┬──────────────────┬──────────────────┐
-│ 文件树    │ 预览（Markdown）  │ 源码              │
-└──────────┴──────────────────┴──────────────────┘
-```
-
-- **编辑范围**：`src/`、`tools/`、`docs/`、`public/`，以及根目录的 `astro.config.mjs` / `tsconfig.json` / `package.json` / `README.md`
-- **Markdown 专属能力**：实时渲染 + 双击预览跳到源码对应行（反之光标移动时预览高亮对应块）
-- **非 Markdown**（`.astro` / `.css` / `.ts` …）：自动收起预览栏，编辑器占满；保存后点「站点 ↗」看效果
-- `⌘P` 快速打开文件，`⌘S` 保存，`☰` 收起文件树，分隔条可拖
-- **安全**：只监听 `127.0.0.1`；路径经 `path.resolve` + 白名单校验，`node_modules` / `dist` / `.git` / `_backup` 与二进制文件一律拒绝
-
-### 发布流程
-
-本地是工地，线上是展厅，两头分开：
-
-1. **构建校验** — 跑 `npm run build`，失败只显示日志，不阻断你继续改；
-2. **提交** — `git add -A` + commit（空提交信息会被拒）；
-3. **推送并部署** — `git push -u origin <branch>`，GitHub Actions 自动构建并发布 Pages。
-
-仓库没连远端时，面板会提示先「设置远端」，只接受 GitHub 地址（https / ssh）。推送目标固定当前分支，没有 `--force`；分叉时（落后 > 0）需要在终端 `git pull --rebase`。
-
-实现：`tools/editor/`（Node 原生 http + markdown-it，无前端框架）。预览样式复用 `dist/_astro` 里构建出的 CSS，所以**先 `npm run build` 一次**预览才是真实排版。
-
-行号映射：markdown-it 的 token 自带 `map`（行区间），渲染时写成 `data-line` / `data-endline`，再按 frontmatter 行数偏移；双击时从 DOM 反查源码行。
+详见 `jarvis/README.md`。
 
 ## 命令
 

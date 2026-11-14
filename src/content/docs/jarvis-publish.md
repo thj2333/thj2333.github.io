@@ -21,7 +21,7 @@ updated: "2026-11-15"
 ## 一、打开
 
 ```bash
-npm run editor        # http://127.0.0.1:4400
+cd ../jarvis && npm start        # http://127.0.0.1:4400
 ```
 
 顶栏切到「发布」（或按 `⌘⇧E`）。

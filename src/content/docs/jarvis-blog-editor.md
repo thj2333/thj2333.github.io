@@ -14,12 +14,12 @@ Jarvis 负责**编程与网站建设**，站点编辑器是它的第一项能力
 ## 一、启动
 
 ```bash
-npm run editor        # http://127.0.0.1:4400
+cd ../jarvis && npm start        # http://127.0.0.1:4400
 npm run dev           # 另开一个终端：保存后站点自动热更新
 ```
 
 - 只监听 `127.0.0.1`，外网访问不到。
-- 换端口：`PORT=4500 npm run editor`。
+- 换端口：`PORT=4500 cd ../jarvis && npm start`。
 - 预览样式取自 `dist/_astro`，想看到真实排版先跑一次 `npm run build`。
 
 ## 二、界面
@@ -92,8 +92,8 @@ npm run dev           # 另开一个终端：保存后站点自动热更新
 
 | 文件 | 作用 |
 | --- | --- |
-| `tools/editor/server.mjs` | 文件树、读写接口、Markdown 渲染、路径校验 |
-| `tools/editor/public/index.html` | 界面骨架（文件树 / 预览 / 源码 / 面板） |
-| `tools/editor/public/editor.js` | 交互逻辑 |
-| `tools/editor/public/preview.html` | 预览 iframe，接收行号映射与高亮 |
-| `tools/editor/public/editor.css` | 控制台样式 |
+| `jarvis/server.mjs` | 文件树、读写接口、Markdown 渲染、路径校验 |
+| `jarvis/public/index.html` | 界面骨架（文件树 / 预览 / 源码 / 面板） |
+| `jarvis/public/app.js` | 交互逻辑 |
+| `jarvis/public/preview.html` | 预览 iframe，接收行号映射与高亮 |
+| `jarvis/public/app.css` | 控制台样式 |
