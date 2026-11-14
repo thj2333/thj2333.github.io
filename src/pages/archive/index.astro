@@ -1,84 +1,161 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getCollection } from "astro:content";
+import {
+  phases,
+  filmsOfPhase,
+  heroes,
+  releasedCount,
+  upcomingCount,
+  films,
+} from "../../data/mcu";
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.issue - a.data.issue,
-);
-
-const years = [...new Set(posts.map((p) => p.data.date.getFullYear()))].sort(
-  (a, b) => b - a,
-);
-
-const fmt = (d: Date) =>
-  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-
-const issueNo = (n: number) => String(n).padStart(3, "0");
+const pad = (n: number) => String(n).padStart(3, "0");
 ---
 
 <Base
-  period="档案库"
-  description="地球 616 的全部刊期：技术笔记、论文精读与踩坑记录。"
+  period="MCU 档案"
+  description="MCU 档案：地球-199999 的院线电影年表与超级英雄名册。"
 >
   <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
     <div
-      class="pointer-events-none absolute -right-6 -top-10 h-40 w-40 halftone dot-fade text-[var(--color-ink)] opacity-[0.08]"
+      class="pointer-events-none absolute -right-6 -top-10 h-44 w-44 halftone dot-fade text-[var(--color-hero)] opacity-[0.12]"
       aria-hidden="true"
     >
     </div>
-    <span class="caption rise d1">档案库 / ARCHIVE</span>
-    <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">全部期号</h1>
-    <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      一共 {posts.length} 期。按印次倒序排列，越往下越旧。
+    <span class="caption rise d1">档案 / ARCHIVE</span>
+    <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">
+      MCU <span class="text-[var(--color-hero)]">档案</span>
+    </h1>
+    <p class="mt-3 max-w-2xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
+      按本刊设定，这里是 616 隔壁那条分支——地球-199999。收录全部院线电影与主要英雄，剧集与特辑暂不入册。
     </p>
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <span class="caption">影片 {films.length}</span>
+      <span class="caption">英雄 {heroes.length}</span>
+      <span class="caption">已上映 {releasedCount}</span>
+      <span class="caption">待映 {upcomingCount}</span>
+    </div>
   </header>
 
-  {
-    years.map((year, yi) => (
-      <section class="mt-10">
-        <div class="mb-5 flex items-center gap-4">
-          <h2 class="display text-4xl text-[var(--color-hero)]">{year}</h2>
-          <div class="rule-heavy flex-1" />
-          <span class="label text-[var(--color-ink-soft)]">
-            {posts.filter((p) => p.data.date.getFullYear() === year).length} 期
-          </span>
-        </div>
+  <!-- ═══ 电影年表 ═══ -->
+  <section class="mt-10">
+    <div class="mb-5 flex items-center gap-4">
+      <h2 class="display text-3xl">电影年表</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">FILMOGRAPHY</span>
+    </div>
 
-        <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {posts
-            .filter((p) => p.data.date.getFullYear() === year)
-            .map((p, i) => (
-              <a
-                href={`/archive/${p.id}`}
-                class={`panel panel-hover group flex flex-col overflow-hidden rise d${Math.min(i + 2, 6)}`}
+    <div class="space-y-8">
+      {
+        phases.map((ph) => (
+          <div class="rise d2">
+            <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b-[3px] border-[var(--color-ink)] pb-2">
+              <span class="display text-4xl leading-none text-[var(--color-hero)]">
+                {String(ph.n).padStart(2, "0")}
+              </span>
+              <span class="display text-xl">{ph.name}</span>
+              <span class="label text-[var(--color-ink-soft)]">{ph.saga}</span>
+              <span class="ml-auto font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
+                {ph.span}
+              </span>
+            </div>
+
+            <ul>
+              {filmsOfPhase(ph.n).map((f, i) => (
+                <li class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-2.5 transition-colors hover:border-[var(--color-ink)] sm:gap-5">
+                  <span class="w-11 shrink-0 font-mono text-[0.68rem] tracking-[0.08em] text-[var(--color-ink-soft)]">
+                    {f.year}
+                  </span>
+                  <span class="w-6 shrink-0 font-mono text-[0.55rem] text-[var(--color-ink)]/30">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[0.92rem] font-bold leading-snug transition-colors group-hover:text-[var(--color-hero)]">
+                      {f.cn}
+                    </span>
+                    <span class="block truncate font-mono text-[0.62rem] tracking-[0.06em] text-[var(--color-ink-soft)]/70">
+                      {f.en}
+                    </span>
+                  </span>
+                  {!f.out && (
+                    <span class="shrink-0 rotate-[-3deg] border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1.5 py-0.5 font-mono text-[0.55rem] font-bold">
+                      待映{f.note ? ` ${f.note}` : ""}
+                    </span>
+                  )}
+                  {f.out && (
+                    <span class="shrink-0 font-mono text-[0.55rem] tracking-[0.1em] text-[var(--color-ink)]/35">
+                      已上映
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═══ 英雄名册 ═══ -->
+  <section class="mt-14">
+    <div class="mb-5 flex items-center gap-4">
+      <h2 class="display text-3xl">英雄名册</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">ROSTER / {pad(heroes.length)}</span>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        heroes.map((h, i) => (
+          <article class={`panel panel-hover rise d${Math.min((i % 6) + 1, 6)}`}>
+            <div class="h-1.5" style={`background:${h.accent}`} aria-hidden="true" />
+            <div class="flex items-start gap-3 p-4">
+              <div
+                class="grid h-14 w-14 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]"
+                style={`background:${h.accent}`}
+                aria-hidden="true"
               >
-                <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-ink)] px-3 py-1.5 text-[var(--color-paper-hi)]">
-                  <span class="font-mono text-[0.6rem] tracking-[0.16em]">
-                    ISSUE #{issueNo(p.data.issue)}
-                  </span>
-                  <span class="font-mono text-[0.6rem] tracking-[0.1em] opacity-70">
-                    {fmt(p.data.date)}
+                <span class="display text-2xl text-[var(--color-paper-hi)]">
+                  {h.en.charAt(0)}
+                </span>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="text-[0.98rem] font-extrabold leading-tight">{h.cn}</h3>
+                  <span
+                    class:list={[
+                      "shrink-0 -rotate-2 border-2 border-[var(--color-ink)] px-1 py-0.5 font-mono text-[0.5rem] font-bold",
+                      h.status === "牺牲" && "bg-[var(--color-ink)] text-[var(--color-paper-hi)]",
+                      h.status === "退役" && "bg-[var(--color-paper-lo)]",
+                      h.status === "在世" && "bg-[var(--color-reactor)]",
+                      h.status === "未知" && "bg-[var(--color-paper-lo)]",
+                    ]}
+                  >
+                    {h.status}
                   </span>
                 </div>
-                <div class="flex flex-1 flex-col p-5">
-                  <h3 class="display text-xl leading-tight transition-colors group-hover:text-[var(--color-hero)]">
-                    {p.data.title}
-                  </h3>
-                  <p class="mt-2.5 flex-1 text-[0.8rem] leading-relaxed text-[var(--color-ink-soft)]">
-                    {p.data.excerpt}
-                  </p>
-                  <div class="mt-4 flex flex-wrap items-center gap-1.5">
-                    {p.data.tags.slice(0, 3).map((t) => (
-                      <span class="border-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)] px-1.5 py-0.5 font-mono text-[0.55rem] tracking-[0.08em]">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
+                <p class="mt-0.5 font-mono text-[0.6rem] tracking-[0.04em] text-[var(--color-ink-soft)]">
+                  {h.alias}
+                </p>
+                <p class="mt-1.5 font-mono text-[0.56rem] tracking-[0.04em] text-[var(--color-ink)]/45">
+                  {h.debut}
+                </p>
+                <div class="mt-2 flex flex-wrap gap-1">
+                  {h.powers.map((p) => (
+                    <span class="border border-[var(--color-ink)]/40 px-1 py-0.5 font-mono text-[0.52rem]">
+                      {p}
+                    </span>
+                  ))}
                 </div>
-              </a>
-            ))}
-        </div>
-      </section>
-    ))
-  }
+              </div>
+            </div>
+            <div class="border-t-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)] px-4 py-1 font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
+              {h.team}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
 </Base>

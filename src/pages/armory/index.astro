@@ -1,23 +1,12 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { tools, statusLabel, type ToolStatus } from "../../data/tools";
-
-const groups: { key: ToolStatus; title: string; note: string }[] = [
-  { key: "online", title: "运行中", note: "正在用，随时可以开" },
-  { key: "beta", title: "测试中", note: "能用，但偶尔会崩" },
-  { key: "archived", title: "已归档", note: "留着纪念，不再维护" },
-];
-
-const grouped = groups.map((g) => ({
-  ...g,
-  items: tools.filter((t) => t.status === g.key),
-}));
+import { assistants, stones, gen3d } from "../../data/tools";
 ---
 
-<Base period="工具柜" description="地球 616 工具柜：自用的小工具与实验性项目。">
+<Base period="工具柜" description="地球 616 工具柜：智能助手、无限宝石与 3D 生成工具。">
   <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
     <div
-      class="pointer-events-none absolute -right-8 -top-12 h-44 w-44 halftone dot-fade text-[var(--color-hero)] opacity-[0.1]"
+      class="pointer-events-none absolute -right-8 -top-12 h-44 w-44 halftone dot-fade text-[var(--color-hero)] opacity-[0.12]"
       aria-hidden="true"
     >
     </div>
@@ -26,78 +15,248 @@ const grouped = groups.map((g) => ({
       武器<span class="text-[var(--color-hero)]">库</span>
     </h1>
     <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      自己写、自己用的小工具。没有一个是给别人用的，所以别指望有文档。
+      三个模块，全部是占位。目前只有 3D 生成那一栏能点出去，其余还在图纸上。
     </p>
     <p class="mt-2 font-mono text-[0.62rem] tracking-[0.18em] text-[var(--color-ink-soft)]">
-      MODULES: {String(tools.length).padStart(2, "0")} · STATUS: NOMINAL
+      MODULES: 03 · STATUS: NOT BUILT
     </p>
   </header>
 
-  {
-    grouped
-      .filter((g) => g.items.length > 0)
-      .map((g, gi) => (
-        <section class="mt-10">
-          <div class="mb-4 flex items-center gap-4">
-            <h2 class="display text-3xl">{g.title}</h2>
-            <div class="rule-heavy flex-1" />
-            <span class="label text-[var(--color-ink-soft)]">{g.note}</span>
-          </div>
+  <!-- ═══ 01 智能助手 ═══ -->
+  <section class="mt-10 scroll-mt-28" id="assistants">
+    <div class="mb-4 flex items-center gap-4">
+      <span class="display text-3xl text-[var(--color-hero)]">01</span>
+      <h2 class="display text-3xl">智能助手</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">ASSISTANTS</span>
+    </div>
 
-          <div class="grid gap-5 md:grid-cols-2">
-            {g.items.map((t, i) => (
-              <a
-                href={t.href}
-                class={`panel-dark group block rise d${Math.min(i + gi + 2, 6)} transition-transform duration-200 hover:-translate-y-1`}
-              >
-                <div class="relative z-10 p-5">
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[0.58rem] tracking-[0.16em] text-[var(--color-hud)]/55">
-                      {t.code}
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                      <span
-                        class:list={[
-                          "h-1.5 w-1.5 rotate-45",
-                          t.status === "online" && "bg-[var(--color-hud)]",
-                          t.status === "beta" && "bg-[var(--color-reactor)]",
-                          t.status === "archived" && "bg-[#6b7b8a]",
-                        ]}
-                      />
-                      <span class="font-mono text-[0.55rem] tracking-[0.12em] text-[var(--color-hud)]/60">
-                        {statusLabel[t.status]}
-                      </span>
-                    </span>
-                  </div>
-
-                  <h3 class="display mt-3 text-2xl text-[#e6f6fb] transition-colors group-hover:text-[var(--color-hud)]">
-                    {t.name}
+    <div class="grid gap-4 md:grid-cols-2">
+      {
+        assistants.map((a, i) => (
+          <article
+            class:list={[
+              "panel-dark rise transition-transform duration-200 hover:-translate-y-1",
+              `d${Math.min(i + 1, 6)}`,
+            ]}
+          >
+            <div class="relative z-10 p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <span class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-hud)]/50">
+                    {a.code}
+                  </span>
+                  <h3
+                    class="display mt-1 text-3xl"
+                    style={`color:${a.accent}`}
+                  >
+                    {a.name}
                   </h3>
-                  <p class="mt-1.5 text-[0.8rem] leading-relaxed text-[var(--color-hud)]/72">
-                    {t.desc}
+                  <p class="mt-0.5 font-mono text-[0.55rem] tracking-[0.06em] text-[var(--color-hud)]/65">
+                    {a.en}
                   </p>
-
-                  <div class="mt-4 flex items-center justify-between border-t border-[var(--color-hud)]/20 pt-3">
-                    <span class="border border-[var(--color-hud)]/40 px-1.5 py-0.5 font-mono text-[0.55rem] tracking-[0.1em] text-[var(--color-hud)]/70">
-                      {t.tag}
-                    </span>
-                    <span class="font-mono text-[0.58rem] tracking-[0.14em] text-[var(--color-hud)]/0 transition-opacity group-hover:text-[var(--color-hud)]">
-                      打开 →
-                    </span>
-                  </div>
                 </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      ))
-  }
+                <span
+                  class:list={[
+                    "shrink-0 rotate-3 border-2 px-1.5 py-0.5 font-mono text-[0.52rem] font-bold",
+                    a.warn
+                      ? "border-[#ff6b6b] bg-[#8b1a1a] text-[#ffe3e3]"
+                      : "border-[var(--color-hud)]/50 text-[var(--color-hud)]/80",
+                  ]}
+                >
+                  {a.status}
+                </span>
+              </div>
 
-  <section class="mt-12 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] p-6">
-    <span class="caption">申请接入 / REQUEST</span>
-    <p class="mt-3 max-w-2xl text-sm leading-relaxed">
-      想加一个新模块？流程是：先写出来自己用两周，用顺了再挂上来。所以这个柜子更新很慢，但放上来的都不会删。
+              <p class="mt-3 border-l-2 border-[var(--color-hud)]/40 pl-2.5 font-mono text-[0.62rem] tracking-[0.06em] text-[var(--color-hud)]/70">
+                职责：{a.duty}
+              </p>
+
+              <p class="mt-3 text-[0.8rem] leading-relaxed text-[var(--color-hud)]/75">
+                {a.persona}
+              </p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═══ 02 无限宝石 ═══ -->
+  <section class="mt-12 scroll-mt-28" id="stones">
+    <div class="mb-4 flex items-center gap-4">
+      <span class="display text-3xl text-[var(--color-hero)]">02</span>
+      <h2 class="display text-3xl">无限宝石</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">INFINITY STONES</span>
+    </div>
+
+    <p class="mb-4 max-w-2xl text-sm leading-relaxed text-[var(--color-ink-soft)]">
+      六颗，功能全部待定。名字先占上，等想清楚再装。
     </p>
-    <a href="/dossier" class="btn-616 mt-5 text-sm">找我聊聊 →</a>
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        stones.map((s, i) => (
+          <article
+            class="gem rise"
+            style={`--gem:${s.color}; animation-delay:${0.05 * i}s`}
+          >
+            <div class="gem-core" aria-hidden="true" />
+            <div class="relative z-10 p-4">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-paper-hi)]/40">
+                  {s.code}
+                </span>
+                <span class="font-mono text-[0.52rem] tracking-[0.12em] text-[var(--color-paper-hi)]/35">
+                  未点亮
+                </span>
+              </div>
+              <h3 class="display mt-2 text-2xl" style={`color:${s.color}`}>
+                {s.name}
+              </h3>
+              <p class="font-mono text-[0.58rem] tracking-[0.1em] text-[var(--color-paper-hi)]/45">
+                {s.en}
+              </p>
+              <p class="mt-3 text-[0.72rem] font-bold text-[var(--color-paper-hi)]/75">
+                掌管 · {s.domain}
+              </p>
+              <p class="mt-1.5 text-[0.72rem] leading-relaxed text-[var(--color-paper-hi)]/45">
+                {s.guess}
+              </p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═══ 03 3D 生成 ═══ -->
+  <section class="mt-12 scroll-mt-28" id="gen3d">
+    <div class="mb-4 flex items-center gap-4">
+      <span class="display text-3xl text-[var(--color-hero)]">03</span>
+      <h2 class="display text-3xl">3D 生成工具</h2>
+      <div class="rule-heavy flex-1"></div>
+      <span class="label text-[var(--color-ink-soft)]">EXTERNAL</span>
+    </div>
+
+    <p class="mb-4 max-w-2xl text-sm leading-relaxed text-[var(--color-ink-soft)]">
+      这一栏不是自己写的，是常用的外部服务，直接跳出去。
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        gen3d.map((g, i) => (
+          <a
+            href={g.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={`panel panel-hover group flex items-start gap-4 p-4 rise d${Math.min(i + 1, 6)}`}
+          >
+            <span class="grid h-12 w-12 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] bg-[var(--color-cape)] shadow-[3px_3px_0_0_var(--color-ink)]">
+              <span class="display text-lg text-[var(--color-paper-hi)]">
+                {g.name.charAt(0)}
+              </span>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2">
+                <span class="display text-xl transition-colors group-hover:text-[var(--color-hero)]">
+                  {g.name}
+                </span>
+                <span class="border border-[var(--color-ink)]/50 px-1 py-0.5 font-mono text-[0.5rem]">
+                  {g.tag}
+                </span>
+                <span class="ml-auto font-mono text-[0.6rem] opacity-40 transition-opacity group-hover:opacity-100">
+                  ↗
+                </span>
+              </span>
+              <span class="mt-1.5 block text-[0.8rem] leading-relaxed text-[var(--color-ink-soft)]">
+                {g.desc}
+              </span>
+              <span class="mt-1 block truncate font-mono text-[0.55rem] text-[var(--color-ink)]/35">
+                {g.url.replace("https://", "")}
+              </span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section
+    class="mt-12 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] p-6"
+  >
+    <span class="caption">施工中 / WIP</span>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed">
+      助手和宝石都还是空壳。装一个上来之前，得先想清楚它到底解决什么问题——不然就是给自己添了个要维护的抽屉。
+    </p>
+    <a href="/blog" class="btn-616 mt-5 text-sm">看博客 →</a>
   </section>
 </Base>
+
+<style>
+  .gem {
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--color-ink);
+    background: radial-gradient(
+        120% 100% at 20% 0%,
+        color-mix(in srgb, var(--gem) 26%, #070b12) 0%,
+        #070b12 60%
+      );
+    color: var(--color-paper-hi);
+    box-shadow: 7px 7px 0 0 var(--color-shadow);
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.8, 0.3, 1),
+      box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  .gem:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 11px 11px 0 0 var(--color-shadow);
+  }
+
+  /* 宝石本体：一颗会呼吸的菱形 */
+  .gem-core {
+    position: absolute;
+    right: -26px;
+    top: -26px;
+    width: 108px;
+    height: 108px;
+    rotate: 45deg;
+    background: linear-gradient(135deg, #fff8, transparent 60%), var(--gem);
+    opacity: 0.32;
+    box-shadow:
+      0 0 34px 6px color-mix(in srgb, var(--gem) 55%, transparent),
+      inset 0 0 18px #fff5;
+    animation: gem-pulse 4.5s ease-in-out infinite;
+  }
+
+  .gem::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 4px
+    );
+  }
+
+  @keyframes gem-pulse {
+    0%,
+    100% {
+      opacity: 0.24;
+    }
+    50% {
+      opacity: 0.42;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gem-core {
+      animation: none;
+    }
+  }
+</style>

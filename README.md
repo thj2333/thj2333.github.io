@@ -1,63 +1,67 @@
 # 地球 616 · thj2333 的个人主页
 
-一个「美漫刊物」风格的个人站：新闻纸底、平涂油墨、粗描边、BEN-DAY 网点、分格排版，深色 HUD 面板做科技感切角。用来放技术博客与自用小工具。
+一个「美漫刊物」风格的个人站：新闻纸底、平涂油墨、粗描边、BEN-DAY 网点、分格排版，深色 HUD 面板做科技切角。
 
-- 主页 `/` — 封面：本期企划 + 目录 + 最近三期 + 工具柜 + 人物档案
-- `/archive` — 全部刊期（文章列表）
-- `/archive/<slug>` — 单篇文章，带本期内页目录
-- `/armory` — 工具柜，按「运行中 / 测试中 / 已归档」分组
-- `/dossier` — 人物档案（神盾局人事档案卡）
-- `/rss.xml` — RSS 订阅
-- `/404` — 宇宙分支不存在
+## 页面
+
+| 路由 | 内容 |
+| --- | --- |
+| `/` | 封面：本期企划 + 终端目录 + 最新博客 + 工具柜速览 + 六颗宝石 |
+| `/archive` | MCU 档案：6 个阶段的 40 部院线电影年表 + 22 位英雄名册 |
+| `/blog` | 博客列表（目前 2 期占位） |
+| `/blog/<slug>` | 单篇博客，带本期内页目录与上下期 |
+| `/armory` | 工具柜：智能助手 / 无限宝石 / 3D 生成工具（占位，未实现） |
+| `/dossier` | ~~人物档案~~ 已下线，改为 `/blog` |
+| `/rss.xml` | RSS |
+| `/404` | 宇宙分支不存在 |
 
 ## 技术栈
 
-- [Astro 5](https://astro.build) — 静态生成，零客户端 JS（除图表类扩展）
-- Tailwind CSS v4（经由 `@tailwindcss/vite`）+ 手写印刷体例 CSS
-- 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文用系统 PingFang / 苹方 / Noto Sans SC
+- [Astro 5](https://astro.build) — 静态生成，无客户端 JS
+- Tailwind CSS v4（`@tailwindcss/vite`）+ 手写印刷体例 CSS
+- 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文走系统 PingFang / Noto Sans SC
 - 内容：Astro Content Collections（Markdown + zod schema）
 
 ## 命令
 
 ```bash
-npm install      # 安装依赖
-npm run dev      # 开发预览 http://localhost:4321
-npm run build    # 产出静态站点到 dist/
+npm install
+npm run dev      # http://localhost:4321
+npm run build    # 输出到 dist/
 npm run preview  # 预览构建结果
 ```
 
-## 写一篇新文章
-
-在 `src/content/blog/` 新建 `.md`，文件名的英文 slug 就是 URL：
-
-```yaml
----
-title: "文章标题"
-date: 2026-11-14
-category: "CVNote"      # 会显示成角标
-excerpt: "列表页与封面用的一句话摘要。"
-issue: 7                # 期号，决定排序与 ISSUE #007 的显示
-tags: ["NeRF", "笔记"]
-draft: false            # true 则不参与构建
----
-```
-
-期号 `issue` 是唯一的排序依据（越大越新），新增文章时记得往上加。
-
-## 改内容
+## 数据在哪
 
 | 想改什么 | 改哪里 |
 | --- | --- |
-| 站点名、刊号、价格、导航 | `src/components/Masthead.astro` |
-| 页脚、条码、版权 | `src/components/SiteFooter.astro` |
-| 首页文案与版面 | `src/pages/index.astro` |
-| 工具清单 | `src/data/tools.ts` |
-| 关于页与能力条 | `src/pages/dossier/index.astro` |
-| SEO / OG / 字体引入 | `src/layouts/Base.astro`、`src/styles/global.css` |
+| MCU 电影年表 / 英雄名册 | `src/data/mcu.ts` |
+| 智能助手 / 无限宝石 / 3D 工具 | `src/data/tools.ts` |
+| 博客文章 | `src/content/blog/*.md` |
+| 站点名、刊号、导航 | `src/components/Masthead.astro` |
+| 页脚 | `src/components/SiteFooter.astro` |
+| 首页版面 | `src/pages/index.astro` |
+| 配色与印刷元件 | `src/styles/global.css` |
+
+电影与英雄都是纯数据，加一条就往里追一条，页面自动渲染。英雄卡的颜色来自 `accent` 字段。
+
+## 写一篇博客
+
+```yaml
+---
+title: "标题"
+date: 2026-11-15
+category: "笔记"
+excerpt: "列表页用的一句话摘要。"
+issue: 3        # 期号，决定排序与 ISSUE #003
+tags: ["NeRF"]
+draft: false    # true 则不上线
+---
+```
 
 ## 改视觉
 
-所有颜色、字体都集中在 `src/styles/global.css` 顶部的 `@theme` 里：
+颜色集中在 `src/styles/global.css` 的 `@theme`：
 
 ```css
 --color-paper: #efe6d0;   /* 新闻纸 */
@@ -68,18 +72,17 @@ draft: false            # true 则不参与构建
 --color-hud: #23e0ff;     /* HUD 青 */
 ```
 
-改这几个值，全站配色跟着变。网点、描边、贴纸、气球这些印刷元件都是下面的工具类：`.halftone` `.panel` `.panel-dark` `.balloon` `.caption` `.sticker` `.crop-marks`。
+> 组件类（`.panel` `.balloon` `.caption` 等）都在 `@layer components` 里，所以 Tailwind 的 `bg-*` / `text-*` 工具类可以正常覆盖它们。别把这些类挪出图层，否则会盖掉工具类。
+
+## 旧笔记备份
+
+原来的 6 篇技术笔记（NeRF、3D 分割、3D AIGC、计组复习等）已从站点移除，**本地备份在 `_backup/notes/`**，该目录已加入 `.gitignore`，不会上传。想恢复某篇，把文件挪回 `src/content/blog/` 并补一个 `issue` 号即可。
 
 ## 部署到 GitHub Pages
 
-仓库已带 `.github/workflows/deploy.yml`（`withastro/action` + `deploy-pages`）。
+仓库带 `.github/workflows/deploy.yml`（`withastro/action` + `deploy-pages`）。
 
-1. 推到一个新仓库，或在现有的 `thj2333.github.io` 仓库里替换内容
-2. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-3. 推到 `main` 分支即自动构建部署
+1. 推到仓库，Settings → Pages → Source 选 **GitHub Actions**
+2. 推到 `main` 自动构建
 
-> 注意：`astro.config.mjs` 里的 `site` 已设为 `https://thj2333.github.io`。若部署到子路径（如 `/blog`），需同时设置 `base: "/blog"` 并同步修改站内绝对链接。
-
-## 旧站迁移
-
-原来的 `thj2333.github.io` 仓库里只有 Hexo 生成的静态产物（`public/`），没有源码。已按旧站 6 篇文章的标题与日期预填了 Markdown 占位，正文需要从旧 HTML 里取回或重写。
+`astro.config.mjs` 的 `site` 已设为 `https://thj2333.github.io`。若部署到子路径，需同时设 `base` 并改站内绝对链接。

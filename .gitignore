@@ -6,3 +6,6 @@ dist/
 .npm-cache/
 .env
 .env.production
+
+# 本地备份：不上传
+_backup/

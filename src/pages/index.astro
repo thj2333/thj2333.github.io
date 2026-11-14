@@ -1,21 +1,20 @@
 ---
 import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
-import { tools, statusLabel } from "../data/tools";
+import { assistants, stones, gen3d } from "../data/tools";
+import { films, heroes, releasedCount } from "../data/mcu";
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft))
-  .sort((a, b) => b.data.issue - a.data.issue);
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.issue - a.data.issue,
+);
+const latest = posts.slice(0, 2);
 
-const latest = posts.slice(0, 3);
-const total = posts.length;
 const letters = ["C", "O", "N", "T", "I", "N", "U", "E", "D"];
 
 const fmt = (d: Date) =>
   `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 
 const issueNo = (n: number) => String(n).padStart(3, "0");
-
-const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
 ---
 
 <Base>
@@ -34,9 +33,7 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
       <div class="relative z-10 flex h-full flex-col p-6 sm:p-9 lg:p-11">
         <div class="flex flex-wrap items-center gap-3">
           <span class="caption">本期企划 / FEATURE</span>
-          <span class="label text-[var(--color-ink-soft)]"
-            >VOL.06 — NO.0616</span
-          >
+          <span class="label text-[var(--color-ink-soft)]">VOL.06 — NO.0616</span>
         </div>
 
         <h1 id="hero-title" class="mt-5">
@@ -52,9 +49,18 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
         <p
           class="mt-6 max-w-md text-[0.95rem] font-bold leading-relaxed text-[var(--color-ink-soft)]"
         >
-          主宇宙档案库。写论文精读，也写踩过的坑；收着几件顺手的小工具。<br />
-          每篇文章算一期连载，目前已经印到第 {issueNo(total)} 期。
+          主宇宙档案库。收着 MCU 全部院线电影与英雄名册、几期还没写完的博客，以及一柜子尚未造出来的工具。
         </p>
+
+        <div
+          class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]"
+        >
+          <span>影片 {films.length}</span>
+          <span aria-hidden="true">·</span>
+          <span>英雄 {heroes.length}</span>
+          <span aria-hidden="true">·</span>
+          <span>工具 03 组</span>
+        </div>
 
         <div class="mt-7 flex flex-wrap items-center gap-3">
           <a href="/archive" class="btn-616">
@@ -68,17 +74,19 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
         </div>
 
         <div class="balloon mt-12 max-w-[17rem] -rotate-1 text-sm">
-          「欢迎来到主宇宙。别的地方都是分支。」
+          「漫画看 616，电影看 199999。都收。」
         </div>
 
         <div
           class="mt-auto flex flex-wrap items-end justify-between gap-4 border-t-2 border-dashed border-[var(--color-ink)]/40 pt-8"
         >
           <div>
-            <p class="label text-[var(--color-ink-soft)]">下一期 / NEXT ISSUE</p>
-            <p class="display mt-1 text-3xl text-[var(--color-ink)]/25">
-              #{String(total + 1).padStart(3, "0")}
-            </p>
+            <p class="label text-[var(--color-ink-soft)]">最近刊期 / LATEST</p>
+            <a
+              href="/blog"
+              class="display mt-1 block text-3xl text-[var(--color-ink)]/25 transition-colors hover:text-[var(--color-hero)]"
+              >#{issueNo(posts[0]?.data.issue ?? 1)}</a
+            >
           </div>
           <div class="text-right">
             <p class="label text-[var(--color-ink-soft)]">想追更？</p>
@@ -92,51 +100,66 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
       </div>
     </section>
 
-    <!-- 终端目录 -->
-    <aside
-      class="panel-dark crop-marks rise d2 lg:col-span-4"
-      aria-labelledby="toc-title"
-    >
+    <!-- 终端面板 -->
+    <aside class="panel-dark crop-marks rise d2 lg:col-span-4" aria-labelledby="toc-title">
       <div class="relative z-10 flex h-full flex-col p-5">
         <div class="flex items-center justify-between">
-          <h2 id="toc-title" class="label text-[var(--color-hud)]">
-            TERMINAL / 目录
-          </h2>
-          <span class="flex items-center gap-1.5 font-mono text-[0.58rem] tracking-[0.18em] text-[var(--color-hud)]/70">
+          <h2 id="toc-title" class="label text-[var(--color-hud)]">TERMINAL / 目录</h2>
+          <span
+            class="flex items-center gap-1.5 font-mono text-[0.58rem] tracking-[0.18em] text-[var(--color-hud)]/70"
+          >
             <span class="h-1.5 w-1.5 bg-[var(--color-hud)] blink"></span>LIVE
           </span>
         </div>
 
         <div
-          class="mt-4 space-y-1 border-y border-[var(--color-hud)]/25 py-3 font-mono text-[0.66rem] leading-relaxed text-[var(--color-hud)]/75"
+          class="mt-4 space-y-1 border-y border-[var(--color-hud)]/25 py-3 font-mono text-[0.64rem] leading-relaxed text-[var(--color-hud)]/70"
         >
           <p>&gt; mount /archive ... ok</p>
-          <p>&gt; issues loaded: {total}</p>
-          <p>&gt; armory modules: {liveTools.length}</p>
+          <p>&nbsp;&nbsp;films {films.length} · heroes {heroes.length}</p>
+          <p>&gt; mount /blog ... ok ({posts.length} issues)</p>
+          <p>&gt; mount /armory ... 03 modules</p>
+          <p>&gt; gem array ... 6/6 LOCKED</p>
           <p class="text-[var(--color-hud)]">&gt; status: NOMINAL_</p>
         </div>
 
         <ul class="mt-4 space-y-0.5">
-          {
-            posts.map((p, i) => (
-              <li>
-                <a
-                  href={`/archive/${p.id}`}
-                  class="group flex items-baseline gap-3 border-b border-dashed border-[var(--color-hud)]/20 py-2.5 transition-colors hover:border-[var(--color-hud)]"
-                >
-                  <span class="font-mono text-[0.6rem] text-[var(--color-hud)]/55">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span class="flex-1 text-[0.82rem] font-bold leading-snug transition-colors group-hover:text-[var(--color-hud)]">
-                    {p.data.title}
-                  </span>
-                  <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">
-                    P{issueNo(p.data.issue)}
-                  </span>
-                </a>
-              </li>
-            ))
-          }
+          <li>
+            <a
+              href="/archive"
+              class="group flex items-baseline gap-3 border-b border-dashed border-[var(--color-hud)]/20 py-2.5 transition-colors hover:border-[var(--color-hud)]"
+            >
+              <span class="font-mono text-[0.6rem] text-[var(--color-hud)]/55">01</span>
+              <span class="flex-1 text-[0.84rem] font-bold transition-colors group-hover:text-[var(--color-hud)]">
+                MCU 档案
+              </span>
+              <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">{films.length}</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="/blog"
+              class="group flex items-baseline gap-3 border-b border-dashed border-[var(--color-hud)]/20 py-2.5 transition-colors hover:border-[var(--color-hud)]"
+            >
+              <span class="font-mono text-[0.6rem] text-[var(--color-hud)]/55">02</span>
+              <span class="flex-1 text-[0.84rem] font-bold transition-colors group-hover:text-[var(--color-hud)]">
+                博客
+              </span>
+              <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">{posts.length}</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="/armory"
+              class="group flex items-baseline gap-3 border-b border-dashed border-[var(--color-hud)]/20 py-2.5 transition-colors hover:border-[var(--color-hud)]"
+            >
+              <span class="font-mono text-[0.6rem] text-[var(--color-hud)]/55">03</span>
+              <span class="flex-1 text-[0.84rem] font-bold transition-colors group-hover:text-[var(--color-hud)]">
+                工具柜
+              </span>
+              <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">03</span>
+            </a>
+          </li>
         </ul>
 
         <div class="mt-auto pt-5">
@@ -145,37 +168,26 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
               <span class="radar-sweep"></span>
             </div>
             <div class="font-mono text-[0.55rem] leading-relaxed tracking-[0.14em] text-[var(--color-hud)]/45">
-              <p>SECTOR 07 / QUEENS</p>
-              <p>LAT 40.7 · LON -73.9</p>
+              <p>EARTH-199999 / SECTOR</p>
+              <p>FILMS {films.length} · IN CINEMA {releasedCount}</p>
               <p class="text-[var(--color-hud)]/70">NO ANOMALY</p>
             </div>
           </div>
-        </div>
-
-        <div class="mt-4 flex items-center justify-between border-t border-[var(--color-hud)]/25 pt-3">
-          <a
-            href="/archive"
-            class="font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-hud)] hover:underline"
-            >全部档案 →</a
-          >
-          <span class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-hud)]/45"
-            >EARTH-616</span
-          >
         </div>
       </div>
     </aside>
   </div>
 
-  <!-- ═══ 本期连载 ═══ -->
+  <!-- ═══ 最新博客 ═══ -->
   <div class="mt-10 flex items-end justify-between gap-4">
     <div>
-      <span class="caption">本期连载 / IN THIS ISSUE</span>
-      <h2 class="display mt-3 text-3xl sm:text-4xl">最近的三期</h2>
+      <span class="caption">最新 / RECENT</span>
+      <h2 class="display mt-3 text-3xl sm:text-4xl">博客最近两期</h2>
     </div>
     <a
-      href="/archive"
+      href="/blog"
       class="hidden shrink-0 border-b-2 border-[var(--color-ink)] pb-0.5 font-mono text-[0.68rem] tracking-[0.16em] hover:text-[var(--color-hero)] sm:block"
-      >查看全部 {total} 期</a
+      >全部 {posts.length} 期</a
     >
   </div>
 
@@ -183,23 +195,21 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
     {
       latest.map((p, i) => (
         <a
-          href={`/archive/${p.id}`}
+          href={`/blog/${p.id}`}
           class={`panel panel-hover group flex flex-col overflow-hidden rise d${i + 2}`}
         >
           <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-reactor)] px-3 py-1.5">
             <span class="font-mono text-[0.62rem] font-bold tracking-[0.16em]">
               ISSUE #{issueNo(p.data.issue)}
             </span>
-            <span class="font-mono text-[0.62rem] tracking-[0.1em]">
-              {fmt(p.data.date)}
-            </span>
+            <span class="font-mono text-[0.62rem] tracking-[0.1em]">{fmt(p.data.date)}</span>
           </div>
-
           <div class="relative flex flex-1 flex-col p-5">
             <div
-              class="pointer-events-none absolute right-0 top-0 h-16 w-16 halftone text-[var(--color-ink)] opacity-[0.07]"
+              class="pointer-events-none absolute right-0 top-0 h-16 w-16 halftone dot-fade text-[var(--color-ink)] opacity-[0.07]"
               aria-hidden="true"
-            />
+            >
+            </div>
             <h3 class="display text-[1.35rem] leading-tight transition-colors group-hover:text-[var(--color-hero)]">
               {p.data.title}
             </h3>
@@ -218,127 +228,140 @@ const liveTools = tools.filter((t) => t.status !== "archived").slice(0, 4);
         </a>
       ))
     }
+
+    <!-- 档案速览 -->
+    <a
+      href="/archive"
+      class="panel panel-hover group relative flex flex-col justify-between overflow-hidden bg-[var(--color-hero)] p-5 text-[var(--color-paper-hi)] rise d4"
+    >
+      <div
+        class="pointer-events-none absolute -right-6 -top-8 h-32 w-32 halftone dot-fade text-[var(--color-ink)] opacity-20"
+        aria-hidden="true"
+      >
+      </div>
+      <div class="relative">
+        <span class="font-mono text-[0.58rem] tracking-[0.2em] opacity-70">MCU 档案速览</span>
+        <div class="mt-3 flex items-end gap-3">
+          <span class="display text-6xl leading-none">{films.length}</span>
+          <span class="pb-1 text-[0.72rem] font-bold opacity-80">部院线电影</span>
+        </div>
+        <div class="mt-2 flex items-end gap-3">
+          <span class="display text-6xl leading-none">{heroes.length}</span>
+          <span class="pb-1 text-[0.72rem] font-bold opacity-80">位英雄</span>
+        </div>
+      </div>
+      <div class="relative mt-5 flex items-center justify-between border-t-2 border-[var(--color-paper-hi)]/40 pt-3">
+        <span class="font-mono text-[0.62rem] tracking-[0.14em]">199999 / 全部已上映</span>
+        <span class="display text-lg">翻档案 →</span>
+      </div>
+    </a>
   </div>
 
-  <!-- ═══ 工具柜 + 人物档案 ═══ -->
+  <!-- ═══ 工具柜 + 无限宝石 ═══ -->
   <div class="mt-10 grid gap-5 lg:grid-cols-12">
-    <section
-      class="panel-dark rise d4 lg:col-span-7"
-      aria-labelledby="armory-title"
-    >
+    <section class="panel-dark rise d4 lg:col-span-7" aria-labelledby="armory-title">
       <div class="relative z-10 p-5 sm:p-6">
         <div class="flex items-center justify-between">
-          <h2 id="armory-title" class="display text-2xl text-[var(--color-hud)]">
-            工具柜
-          </h2>
+          <h2 id="armory-title" class="display text-2xl text-[var(--color-hud)]">工具柜</h2>
           <span class="font-mono text-[0.58rem] tracking-[0.2em] text-[var(--color-hud)]/60"
-            >ARMORY / {String(liveTools.length).padStart(2, "0")}</span
+            >ARMORY / 03</span
           >
         </div>
 
-        <ul class="mt-4 divide-y divide-[var(--color-hud)]/15">
-          {
-            liveTools.map((t) => (
-              <li>
-                <a
-                  href={t.href}
-                  class="group flex items-center gap-3 py-3 transition-colors hover:bg-[var(--color-hud)]/5"
-                >
-                  <span class="font-mono text-[0.55rem] tracking-[0.12em] text-[var(--color-hud)]/45">
-                    {t.code}
-                  </span>
-                  <span class="flex-1">
-                    <span class="block text-[0.88rem] font-bold text-[#e6f6fb] transition-colors group-hover:text-[var(--color-hud)]">
-                      {t.name}
-                    </span>
-                    <span class="mt-0.5 block text-[0.68rem] leading-relaxed text-[var(--color-hud)]/70">
-                      {t.desc}
-                    </span>
-                  </span>
-                  <span class="flex shrink-0 items-center gap-1.5">
-                    <span
-                      class:list={[
-                        "h-1.5 w-1.5 rotate-45",
-                        t.status === "online" && "bg-[var(--color-hud)]",
-                        t.status === "beta" && "bg-[var(--color-reactor)]",
-                        t.status === "archived" && "bg-[#6b7b8a]",
-                      ]}
-                    />
-                    <span class="font-mono text-[0.55rem] tracking-[0.1em] text-[var(--color-hud)]/75">
-                      {statusLabel[t.status]}
-                    </span>
-                  </span>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
+        <div class="mt-4 space-y-3">
+          <a
+            href="/armory#assistants"
+            class="flex items-center gap-3 border-b border-dashed border-[var(--color-hud)]/20 pb-3 transition-colors hover:border-[var(--color-hud)]"
+          >
+            <span class="font-mono text-[0.55rem] tracking-[0.12em] text-[var(--color-hud)]/45">01</span>
+            <span class="flex-1">
+              <span class="block text-[0.88rem] font-bold text-[#e6f6fb]">智能助手</span>
+              <span class="mt-0.5 block font-mono text-[0.6rem] tracking-[0.06em] text-[var(--color-hud)]/50">
+                {assistants.map((a) => a.name).join(" · ")}
+              </span>
+            </span>
+            <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/60">{assistants.length} 台</span>
+          </a>
+
+          <a
+            href="/armory#stones"
+            class="flex items-center gap-3 border-b border-dashed border-[var(--color-hud)]/20 pb-3 transition-colors hover:border-[var(--color-hud)]"
+          >
+            <span class="font-mono text-[0.55rem] tracking-[0.12em] text-[var(--color-hud)]/45">02</span>
+            <span class="flex-1">
+              <span class="block text-[0.88rem] font-bold text-[#e6f6fb]">无限宝石</span>
+              <span class="mt-0.5 block font-mono text-[0.6rem] tracking-[0.06em] text-[var(--color-hud)]/50">
+                空间 · 心灵 · 现实 · 力量 · 时间 · 灵魂
+              </span>
+            </span>
+            <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/60">{stones.length} 颗</span>
+          </a>
+
+          <a
+            href="/armory#gen3d"
+            class="flex items-center gap-3 transition-colors"
+          >
+            <span class="font-mono text-[0.55rem] tracking-[0.12em] text-[var(--color-hud)]/45">03</span>
+            <span class="flex-1">
+              <span class="block text-[0.88rem] font-bold text-[#e6f6fb]">3D 生成工具</span>
+              <span class="mt-0.5 block font-mono text-[0.6rem] tracking-[0.06em] text-[var(--color-hud)]/50">
+                {gen3d.map((g) => g.name).join(" · ")}
+              </span>
+            </span>
+            <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/60">外部</span>
+          </a>
+        </div>
 
         <a
           href="/armory"
-          class="mt-4 inline-block border-b-2 border-[var(--color-hud)]/50 pb-0.5 font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-hud)] hover:border-[var(--color-hud)]"
+          class="mt-5 inline-block border-b-2 border-[var(--color-hud)]/50 pb-0.5 font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-hud)] hover:border-[var(--color-hud)]"
           >全部工具 →</a
         >
       </div>
     </section>
 
-    <section class="panel rise d5 lg:col-span-5" aria-labelledby="dossier-title">
-      <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-cape)] px-4 py-2">
-        <span class="label text-[var(--color-paper-hi)]">人物档案 / DOSSIER</span>
-        <span class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-paper-hi)]/70">616-A</span>
+    <section class="panel rise d5 lg:col-span-5" aria-labelledby="gems-title">
+      <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-ink)] px-4 py-2">
+        <h2 id="gems-title" class="label text-[var(--color-paper-hi)]">无限宝石 / 6</h2>
+        <span class="font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-paper-hi)]/60">LOCKED</span>
       </div>
-
-      <div class="p-5">
-        <div class="flex items-start gap-4">
-          <div class="relative grid h-20 w-20 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] shadow-[4px_4px_0_0_var(--color-ink)]">
-            <span class="display text-2xl text-[var(--color-paper-hi)]">THJ</span>
-            <span class="absolute -bottom-2 -right-2 border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1 font-mono text-[0.5rem] font-bold">
-              ID
-            </span>
-          </div>
-          <div class="min-w-0">
-            <h2 id="dossier-title" class="display text-2xl">thj2333</h2>
-            <p class="label mt-1 text-[var(--color-ink-soft)]">开发者 / 学生</p>
-            <p class="mt-2 text-[0.78rem] leading-relaxed text-[var(--color-ink-soft)]">
-              同时出现在两个宇宙：一个写代码，一个看漫画。
-            </p>
-          </div>
-        </div>
-
-        <dl class="mt-6 space-y-3">
+      <div class="p-4">
+        <div class="grid grid-cols-3 gap-2.5">
           {
-            [
-              { k: "代码 / CODE", v: 78, c: "var(--color-cape)" },
-              { k: "论文 / PAPERS", v: 64, c: "var(--color-hero)" },
-              { k: "咖啡 / COFFEE", v: 91, c: "var(--color-reactor)" },
-            ].map((s) => (
-              <div class="flex items-center gap-3">
-                <dt class="w-28 shrink-0 font-mono text-[0.55rem] tracking-[0.14em] text-[var(--color-ink-soft)]">
-                  {s.k}
-                </dt>
-                <div class="h-3 flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)]">
-                  <div class="h-full" style={`width:${s.v}%;background:${s.c}`} />
-                </div>
-                <dd class="w-8 text-right font-mono text-[0.58rem] font-bold">
-                  {s.v}
-                </dd>
-              </div>
+            stones.map((s) => (
+              <a
+                href="/armory#stones"
+                class="group relative overflow-hidden border-2 border-[var(--color-ink)] bg-[#0a0f16] p-2.5 text-center transition-transform hover:-translate-y-0.5"
+              >
+                <span
+                  class="mx-auto block h-7 w-7 rotate-45 border border-[var(--color-paper-hi)]/30"
+                  style={`background:${s.color};box-shadow:0 0 14px 2px ${s.color}88`}
+                  aria-hidden="true"
+                />
+                <span class="mt-3 block text-[0.66rem] font-bold text-[var(--color-paper-hi)]/85">
+                  {s.name.replace("宝石", "")}
+                </span>
+                <span class="mt-0.5 block font-mono text-[0.48rem] tracking-[0.1em] text-[var(--color-paper-hi)]/35">
+                  未点亮
+                </span>
+              </a>
             ))
           }
-        </dl>
-
-        <a href="/dossier" class="btn-616 mt-6 w-full justify-center text-sm">
-          查看完整档案 →
-        </a>
+        </div>
+        <p class="mt-4 font-mono text-[0.58rem] leading-relaxed tracking-[0.06em] text-[var(--color-ink-soft)]">
+          // 六颗都在，功能全部待定。想清楚一颗就点亮一颗。
+        </p>
       </div>
     </section>
   </div>
 
   <!-- ═══ 跑马灯 ═══ -->
-  <div class="mt-10 overflow-hidden border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] py-2 shadow-[7px_7px_0_0_var(--color-ink)]">
+  <div
+    class="mt-10 overflow-hidden border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] py-2 shadow-[7px_7px_0_0_var(--color-ink)]"
+  >
     <div class="marquee flex w-max gap-6 whitespace-nowrap">
       {
-        [...letters, ...letters].map((c, i) => (
+        [...letters, ...letters].map((c) => (
           <span class="flex items-center gap-6">
             <span class="display text-lg text-[var(--color-paper-hi)]">{c}</span>
             <span class="text-[var(--color-paper-hi)]/60">•</span>

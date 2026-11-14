@@ -52,6 +52,8 @@
   }
 }
 
+@layer components {
+
 /* ---------- 纸张与颗粒 ---------- */
 
 .paper-grain {
@@ -459,6 +461,8 @@
     transform: none;
   }
 }
+
+} /* end @layer components */
 
 /* ---------- 正文排版（印刷体例） ---------- */
 

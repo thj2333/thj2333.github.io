@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ site }) => {
 
   const items = posts
     .map((p) => {
-      const url = new URL(`/archive/${p.id}/`, base).toString();
+      const url = new URL(`/blog/${p.id}/`, base).toString();
       return `    <item>
       <title>${esc(p.data.title)}</title>
       <link>${url}</link>
@@ -32,7 +32,7 @@ export const GET: APIRoute = async ({ site }) => {
   <channel>
     <title>地球 616 — thj2333</title>
     <link>${base.toString()}</link>
-    <description>地球 616 主宇宙档案库：技术笔记、论文精读与工具。</description>
+    <description>地球 616：MCU 档案、博客与工具。</description>
     <language>zh-CN</language>
     <atom:link href="${new URL("/rss.xml", base)}" rel="self" type="application/rss+xml" />
 ${items}

@@ -1,0 +1,70 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.issue - a.data.issue,
+);
+
+const fmt = (d: Date) =>
+  `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+
+const issueNo = (n: number) => String(n).padStart(3, "0");
+---
+
+<Base period="博客" description="地球 616 的博客：随笔、笔记与踩坑记录。">
+  <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
+    <div
+      class="pointer-events-none absolute -right-6 -top-10 h-44 w-44 halftone dot-fade text-[var(--color-ink)] opacity-[0.1]"
+      aria-hidden="true"
+    >
+    </div>
+    <span class="caption rise d1">博客 / BLOG</span>
+    <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">
+      随笔<span class="text-[var(--color-hero)]">与</span>笔记
+    </h1>
+    <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
+      技术、论文、以及一些没想明白的问题。目前 {posts.length} 期，都还是占位。
+    </p>
+  </header>
+
+  <div class="mt-8 grid gap-5 md:grid-cols-2">
+    {
+      posts.map((p, i) => (
+        <a
+          href={`/blog/${p.id}`}
+          class={`panel panel-hover group flex flex-col overflow-hidden rise d${i + 2}`}
+        >
+          <div class="flex items-center justify-between border-b-[3px] border-[var(--color-ink)] bg-[var(--color-reactor)] px-3 py-1.5">
+            <span class="font-mono text-[0.6rem] font-bold tracking-[0.16em]">
+              ISSUE #{issueNo(p.data.issue)}
+            </span>
+            <span class="font-mono text-[0.6rem] tracking-[0.1em]">
+              {fmt(p.data.date)}
+            </span>
+          </div>
+          <div class="flex flex-1 flex-col p-5">
+            <h2 class="display text-2xl leading-tight transition-colors group-hover:text-[var(--color-hero)]">
+              {p.data.title}
+            </h2>
+            <p class="mt-3 flex-1 text-[0.84rem] leading-relaxed text-[var(--color-ink-soft)]">
+              {p.data.excerpt}
+            </p>
+            <div class="mt-4 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-3">
+              <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
+                {p.data.category}
+              </span>
+              <span class="font-mono text-[0.62rem] tracking-[0.14em] opacity-0 transition-opacity group-hover:opacity-100">
+                阅读 →
+              </span>
+            </div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+
+  <p class="mt-8 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]">
+    // 旧笔记已下架，本地保留备份。
+  </p>
+</Base>
