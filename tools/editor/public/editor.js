@@ -1,19 +1,32 @@
-/* 616 blog editor — 前端逻辑 */
+/* Jarvis · 站点控制台 —— 前端逻辑 */
 
 const $ = (sel) => document.querySelector(sel);
 
 const els = {
-  select: $("#post-select"),
+  tree: $("#tree"),
+  treePane: $("#tree-pane"),
+  toggleTree: $("#toggle-tree"),
+  path: $("#path"),
+  meta: $("#meta"),
   code: $("#code"),
   gutter: $("#gutter"),
   preview: $("#preview"),
+  previewTitle: $("#preview-title"),
+  previewHint: $("#preview-hint"),
   status: $("#status"),
   save: $("#save"),
-  meta: $("#meta"),
+  fileLabel: $("#file-label"),
   count: $("#count"),
   split: $("#split"),
   divider: $("#divider"),
+  openSite: $("#open-site"),
+  palette: $("#palette"),
+  paletteInput: $("#palette-input"),
+  paletteList: $("#palette-list"),
 };
+
+const SITE_BASE = `http://${location.hostname}:4321`;
+const LINE_HEIGHT = 21;
 
 const CAT_LABEL = {
   cinema: "IP 电影",
@@ -25,19 +38,20 @@ const CAT_LABEL = {
 };
 
 const state = {
-  file: null,
+  path: null,
   saved: "",
-  posts: [],
   dirty: false,
   ready: false,
   pending: null,
+  mode: "other",
+  files: [],
   lastLine: 1,
   renderSeq: 0,
+  paletteIndex: 0,
+  paletteItems: [],
 };
 
-const LINE_HEIGHT = 21;
-
-/* ---------------- 工具 ---------------- */
+/* ---------------- 通用 ---------------- */
 
 function setStatus(text, kind = "") {
   els.status.textContent = text;
@@ -46,17 +60,14 @@ function setStatus(text, kind = "") {
 
 function markDirty(dirty) {
   state.dirty = dirty;
-  els.save.disabled = !dirty || !state.file;
-  if (dirty) {
-    setStatus("未保存更改", "dirty");
-  }
+  els.save.disabled = !dirty || !state.path;
+  if (dirty) setStatus("未保存更改", "dirty");
 }
 
 function updateCounts() {
   const value = els.code.value;
   const lines = value.split("\n").length;
-  const chars = value.length;
-  els.count.textContent = `${lines} 行 · ${chars.toLocaleString()} 字符`;
+  els.count.textContent = `${lines} 行 · ${value.length.toLocaleString()} 字符`;
   els.gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
 }
 
@@ -64,16 +75,104 @@ function syncGutter() {
   els.gutter.scrollTop = els.code.scrollTop;
 }
 
-/* ---------------- 预览 ---------------- */
+const isMarkdown = (p) => /\.(md|mdx)$/i.test(p || "");
 
-function sendHtml(html) {
-  state.pending = html;
-  if (!state.ready) return;
-  els.preview.contentWindow.postMessage({ type: "html", html }, "*");
+/* ---------------- 站点链接 ---------------- */
+
+function siteUrl(p) {
+  if (!p) return SITE_BASE + "/";
+  if (p.startsWith("src/pages/")) {
+    let rest = p.slice("src/pages/".length).replace(/\.(astro|md|mdx)$/i, "");
+    if (rest.includes("[")) return SITE_BASE + "/";
+    if (rest === "index") return SITE_BASE + "/";
+    rest = rest.replace(/\/index$/, "");
+    return SITE_BASE + "/" + rest + "/";
+  }
+  if (p.startsWith("src/content/blog/")) {
+    const slug = p.split("/").pop().replace(/\.(md|mdx)$/i, "");
+    return SITE_BASE + "/blog/" + slug + "/";
+  }
+  return SITE_BASE + "/";
 }
 
-const escapeHtml = (str) =>
-  String(str).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function openSiteTab() {
+  window.open(siteUrl(state.path), "_blank", "noopener");
+}
+
+/* ---------------- 文件树 ---------------- */
+
+function buildTree(paths) {
+  const root = { dirs: new Map(), files: [] };
+  for (const p of paths) {
+    const parts = p.split("/");
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const d = parts[i];
+      if (!node.dirs.has(d)) node.dirs.set(d, { dirs: new Map(), files: [] });
+      node = node.dirs.get(d);
+    }
+    node.files.push({ name: parts[parts.length - 1], path: p });
+  }
+  return root;
+}
+
+function renderTree(node, container, depth) {
+  for (const [name, child] of [...node.dirs.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    const det = document.createElement("details");
+    det.className = "tree-dir";
+    if (depth === 0) det.open = true;
+    const sum = document.createElement("summary");
+    sum.textContent = name;
+    det.appendChild(sum);
+    const inner = document.createElement("div");
+    inner.className = "tree-children";
+    renderTree(child, inner, depth + 1);
+    det.appendChild(inner);
+    container.appendChild(det);
+  }
+  for (const f of node.files.sort((a, b) => a.name.localeCompare(b.name))) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tree-file";
+    btn.dataset.path = f.path;
+    btn.textContent = f.name;
+    btn.title = f.path;
+    btn.addEventListener("click", () => openFile(f.path));
+    container.appendChild(btn);
+  }
+}
+
+async function loadTree() {
+  const res = await fetch("/api/tree");
+  const data = await res.json();
+  state.files = data.files || [];
+  els.tree.innerHTML = "";
+  renderTree(buildTree(state.files.map((f) => f.path)), els.tree, 0);
+}
+
+function markActiveFile(path) {
+  els.tree
+    .querySelectorAll(".tree-file")
+    .forEach((el) => el.classList.toggle("active", el.dataset.path === path));
+  const active = els.tree.querySelector(".tree-file.active");
+  if (active) {
+    let p = active.parentElement;
+    while (p && p !== els.tree) {
+      if (p.tagName === "DETAILS") p.open = true;
+      p = p.parentElement;
+    }
+  }
+}
+
+/* ---------------- 预览 ---------------- */
+
+const escapeHtml = (s) =>
+  String(s).replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+  );
 
 function previewHeader(meta) {
   if (!meta || !meta.title) return "";
@@ -87,7 +186,14 @@ function previewHeader(meta) {
   </div>`;
 }
 
-async function render() {
+function sendHtml(html) {
+  state.pending = html;
+  if (!state.ready) return;
+  els.preview.contentWindow.postMessage({ type: "html", html }, "*");
+}
+
+async function renderPreview() {
+  if (!isMarkdown(state.path)) return;
   const seq = ++state.renderSeq;
   try {
     const res = await fetch("/api/render", {
@@ -97,8 +203,9 @@ async function render() {
     });
     if (!res.ok) throw new Error(`render ${res.status}`);
     const data = await res.json();
-    if (seq !== state.renderSeq) return; // 丢弃过期结果
+    if (seq !== state.renderSeq) return;
     sendHtml(previewHeader(data.meta) + data.html);
+    paintMeta(data.meta);
   } catch (err) {
     setStatus(`预览失败：${err.message}`, "dirty");
   }
@@ -106,11 +213,104 @@ async function render() {
 
 let renderTimer = null;
 function scheduleRender() {
+  if (!isMarkdown(state.path)) return;
   clearTimeout(renderTimer);
-  renderTimer = setTimeout(render, 220);
+  renderTimer = setTimeout(renderPreview, 220);
 }
 
-/* ---------------- 跳转与高亮 ---------------- */
+function paintMeta(meta) {
+  if (!meta) {
+    els.meta.innerHTML = "";
+    return;
+  }
+  const cat = CAT_LABEL[meta.cat] || meta.cat || "";
+  const issue = meta.issue ? `#${String(meta.issue).padStart(3, "0")}` : "";
+  els.meta.innerHTML = [issue, cat]
+    .filter(Boolean)
+    .map((t) => `<span>${escapeHtml(t)}</span>`)
+    .join("");
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  const md = mode === "md";
+  // 非 Markdown 没有实时预览：收起预览栏，编辑器占满
+  document.body.classList.toggle("hide-preview", !md);
+  els.preview.hidden = !md;
+  els.previewTitle.textContent = md ? "预览" : "无预览";
+  els.previewHint.textContent = md
+    ? "双击任意段落 → 跳到源码对应行"
+    : "保存后到本地站点查看";
+}
+
+/* ---------------- 打开 / 保存 ---------------- */
+
+async function openFile(path) {
+  if (!path) return;
+  if (state.dirty && !confirm("当前修改还没保存，确定切换文件？")) return;
+
+  setStatus("读取中…");
+  const res = await fetch("/api/file?path=" + encodeURIComponent(path));
+  if (!res.ok) {
+    setStatus("读取失败", "dirty");
+    return;
+  }
+  const data = await res.json();
+
+  state.path = data.path;
+  state.saved = data.content;
+  state.dirty = false;
+  els.save.disabled = true;
+
+  els.code.value = data.content;
+  els.path.textContent = data.path;
+  els.fileLabel.textContent = data.path.split("/").pop();
+  els.meta.innerHTML = "";
+
+  const md = isMarkdown(data.path);
+  setMode(md ? "md" : "other");
+
+  updateCounts();
+  syncGutter();
+  markActiveFile(data.path);
+
+  if (md) await renderPreview();
+
+  setStatus(md ? "已加载" : "已加载（无预览）", "saved");
+  try {
+    localStorage.setItem("jarvis:last", data.path);
+  } catch {
+    /* noop */
+  }
+}
+
+async function save() {
+  if (!state.path) return;
+  els.save.disabled = true;
+  setStatus("保存中…");
+  try {
+    const res = await fetch("/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: state.path, content: els.code.value }),
+    });
+    if (!res.ok) throw new Error(`save ${res.status}`);
+    const data = await res.json();
+    state.saved = els.code.value;
+    markDirty(false);
+    const t = new Date(data.mtime || Date.now());
+    const hh = String(t.getHours()).padStart(2, "0");
+    const mm = String(t.getMinutes()).padStart(2, "0");
+    const ss = String(t.getSeconds()).padStart(2, "0");
+    setStatus(`已保存 ${hh}:${mm}:${ss}`, "saved");
+    if (isMarkdown(state.path)) renderPreview();
+  } catch (err) {
+    markDirty(true);
+    setStatus(`保存失败：${err.message}`, "dirty");
+  }
+}
+
+/* ---------------- 定位与高亮 ---------------- */
 
 function lineStartOffset(lines, line) {
   let offset = 0;
@@ -124,18 +324,13 @@ function jumpToLine(line, endline) {
   const lines = els.code.value.split("\n");
   const startLine = Math.max(1, Math.min(line, lines.length));
   const endLine = Math.max(startLine, Math.min(endline || startLine, lines.length));
-
   const start = lineStartOffset(lines, startLine);
   const end = lineStartOffset(lines, endLine) + (lines[endLine - 1]?.length || 0);
 
   els.code.focus();
   els.code.setSelectionRange(start, end);
-
-  const targetTop = (startLine - 1) * LINE_HEIGHT - LINE_HEIGHT * 3;
-  els.code.scrollTop = Math.max(0, targetTop);
+  els.code.scrollTop = Math.max(0, (startLine - 1) * LINE_HEIGHT - LINE_HEIGHT * 3);
   syncGutter();
-
-  els.code.dispatchEvent(new Event("scroll"));
   setStatus(`已定位到第 ${startLine} 行`, "saved");
   setTimeout(() => {
     if (state.dirty) setStatus("未保存更改", "dirty");
@@ -143,100 +338,67 @@ function jumpToLine(line, endline) {
 }
 
 function lineAtCaret() {
-  const before = els.code.value.slice(0, els.code.selectionStart);
-  return before.split("\n").length;
+  return els.code.value.slice(0, els.code.selectionStart).split("\n").length;
 }
 
 function highlightInPreview() {
-  if (!state.ready) return;
-  const line = lineAtCaret();
-  state.lastLine = line;
-  els.preview.contentWindow.postMessage({ type: "highlight", line }, "*");
+  if (state.mode !== "md" || !state.ready) return;
+  els.preview.contentWindow.postMessage(
+    { type: "highlight", line: lineAtCaret() },
+    "*",
+  );
 }
 
-/* ---------------- 加载与保存 ---------------- */
+/* ---------------- 快速打开 ---------------- */
 
-async function loadPosts() {
-  const res = await fetch("/api/posts");
-  const data = await res.json();
-  state.posts = data.posts || [];
-
-  els.select.innerHTML = "";
-  for (const p of state.posts) {
-    const opt = document.createElement("option");
-    opt.value = p.file;
-    const cat = CAT_LABEL[p.cat] || p.cat;
-    opt.textContent = `#${String(p.issue).padStart(3, "0")} · ${p.title} — ${cat}`;
-    els.select.appendChild(opt);
-  }
+function filteredFiles(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return state.files;
+  return state.files.filter((f) => f.path.toLowerCase().includes(q));
 }
 
-function paintMeta() {
-  const post = state.posts.find((p) => p.file === state.file);
-  if (!post) {
-    els.meta.innerHTML = "";
-    return;
-  }
-  const cat = CAT_LABEL[post.cat] || post.cat;
-  els.meta.innerHTML = [
-    `<span>#${String(post.issue).padStart(3, "0")}</span>`,
-    `<span>${cat}</span>`,
-    post.updated ? `<span style="color:#f2a900">持续更新</span>` : "",
-  ]
-    .filter(Boolean)
+function paintPalette() {
+  const q = els.paletteInput.value;
+  state.paletteItems = filteredFiles(q).slice(0, 40);
+  state.paletteIndex = 0;
+  els.paletteList.innerHTML = state.paletteItems
+    .map((f, i) => {
+      const parts = f.path.split("/");
+      const file = parts.pop();
+      const dir = parts.join("/");
+      return `<li data-i="${i}" class="${i === 0 ? "active" : ""}">
+        <span>${escapeHtml(file)}</span><span class="dir">${escapeHtml(dir)}</span>
+      </li>`;
+    })
     .join("");
 }
 
-async function loadPost(file) {
-  if (!file) return;
-  setStatus("加载中…");
-  const res = await fetch("/api/post?file=" + encodeURIComponent(file));
-  if (!res.ok) {
-    setStatus("读取失败", "dirty");
-    return;
-  }
-  const data = await res.json();
-  state.file = data.file || file;
-  els.code.value = data.raw;
-  state.saved = data.raw;
-  state.dirty = false;
-  els.save.disabled = true;
-  els.select.value = state.file;
-  updateCounts();
-  syncGutter();
-  paintMeta();
-  await render();
-  setStatus("已加载", "saved");
-  try {
-    localStorage.setItem("e616:editor:last", state.file);
-  } catch {
-    /* noop */
-  }
+function movePalette(delta) {
+  if (!state.paletteItems.length) return;
+  state.paletteIndex =
+    (state.paletteIndex + delta + state.paletteItems.length) %
+    state.paletteItems.length;
+  els.paletteList
+    .querySelectorAll("li")
+    .forEach((li, i) => li.classList.toggle("active", i === state.paletteIndex));
 }
 
-async function save() {
-  if (!state.file) return;
-  els.save.disabled = true;
-  setStatus("保存中…");
-  try {
-    const res = await fetch("/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ file: state.file, content: els.code.value }),
-    });
-    if (!res.ok) throw new Error(`save ${res.status}`);
-    const data = await res.json();
-    state.saved = els.code.value;
-    markDirty(false);
-    const t = new Date(data.mtime || Date.now());
-    setStatus(
-      `已保存 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}:${String(t.getSeconds()).padStart(2, "0")}`,
-      "saved",
-    );
-  } catch (err) {
-    markDirty(true);
-    setStatus(`保存失败：${err.message}`, "dirty");
-  }
+function openPalette() {
+  els.palette.hidden = false;
+  els.paletteInput.value = "";
+  paintPalette();
+  els.paletteInput.focus();
+}
+
+function closePalette() {
+  els.palette.hidden = true;
+}
+
+function choosePalette(i) {
+  const item = state.paletteItems[i];
+  if (!item) return;
+  closePalette();
+  openFile(item.path);
 }
 
 /* ---------------- 事件 ---------------- */
@@ -248,25 +410,50 @@ els.code.addEventListener("input", () => {
 });
 
 els.code.addEventListener("scroll", syncGutter);
-
 for (const evt of ["click", "keyup", "focus"]) {
   els.code.addEventListener(evt, highlightInPreview);
 }
 
 els.save.addEventListener("click", save);
+els.openSite.addEventListener("click", openSiteTab);
 
-els.select.addEventListener("change", () => {
-  if (state.dirty && !confirm("当前修改还没保存，确定切换文章？")) {
-    els.select.value = state.file || "";
-    return;
+els.toggleTree.addEventListener("click", () => {
+  document.body.classList.toggle("hide-tree");
+});
+
+els.paletteInput.addEventListener("input", paintPalette);
+els.paletteInput.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    movePalette(1);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    movePalette(-1);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    choosePalette(state.paletteIndex);
+  } else if (e.key === "Escape") {
+    closePalette();
   }
-  loadPost(els.select.value);
+});
+els.paletteList.addEventListener("click", (e) => {
+  const li = e.target.closest("li");
+  if (li) choosePalette(Number(li.dataset.i));
+});
+els.palette.addEventListener("click", (e) => {
+  if (e.target === els.palette) closePalette();
 });
 
 window.addEventListener("keydown", (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === "s") {
     e.preventDefault();
     if (state.dirty) save();
+  } else if (mod && e.key.toLowerCase() === "p") {
+    e.preventDefault();
+    openPalette();
+  } else if (e.key === "Escape" && !els.palette.hidden) {
+    closePalette();
   }
 });
 
@@ -282,28 +469,26 @@ window.addEventListener("message", (e) => {
   if (d.type === "ready") {
     state.ready = true;
     if (state.pending) {
-      els.preview.contentWindow.postMessage({ type: "html", html: state.pending }, "*");
+      els.preview.contentWindow.postMessage(
+        { type: "html", html: state.pending },
+        "*",
+      );
     }
     return;
   }
-  if (d.type === "locate") {
-    jumpToLine(d.line, d.endline);
-  }
+  if (d.type === "locate") jumpToLine(d.line, d.endline);
 });
 
 /* ---------------- 分栏拖拽 ---------------- */
 
 (() => {
   let dragging = false;
-
   const onMove = (e) => {
     if (!dragging) return;
     const rect = els.split.getBoundingClientRect();
     const pct = ((e.clientX - rect.left) / rect.width) * 100;
-    const clamped = Math.min(80, Math.max(24, pct));
-    els.split.style.setProperty("--left", clamped + "%");
+    els.split.style.setProperty("--left", Math.min(78, Math.max(18, pct)) + "%");
   };
-
   const stop = () => {
     dragging = false;
     els.divider.classList.remove("dragging");
@@ -311,7 +496,6 @@ window.addEventListener("message", (e) => {
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", stop);
   };
-
   els.divider.addEventListener("pointerdown", (e) => {
     dragging = true;
     els.divider.classList.add("dragging");
@@ -320,32 +504,25 @@ window.addEventListener("message", (e) => {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", stop);
   });
-
-  els.divider.addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    const current = parseFloat(getComputedStyle(els.split).getPropertyValue("--left")) || 52;
-    const next = Math.min(80, Math.max(24, current + (e.key === "ArrowLeft" ? -4 : 4)));
-    els.split.style.setProperty("--left", next + "%");
-  });
 })();
 
 /* ---------------- 启动 ---------------- */
 
 (async () => {
   try {
-    await loadPosts();
+    await loadTree();
     let last = null;
     try {
-      last = localStorage.getItem("e616:editor:last");
+      last = localStorage.getItem("jarvis:last");
     } catch {
       /* noop */
     }
     const target =
-      (last && state.posts.some((p) => p.file === last) && last) ||
-      state.posts[0]?.file;
-    if (target) await loadPost(target);
-    else setStatus("没有可编辑的文章", "dirty");
+      (last && state.files.some((f) => f.path === last) && last) ||
+      state.files.find((f) => f.path === "src/pages/index.astro")?.path ||
+      state.files[0]?.path;
+    if (target) await openFile(target);
+    else setStatus("没有可编辑的文件", "dirty");
   } catch (err) {
     setStatus(`初始化失败：${err.message}`, "dirty");
   }

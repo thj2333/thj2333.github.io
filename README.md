@@ -26,24 +26,29 @@
 - 字体自托管：Anton（标题）、JetBrains Mono（HUD 数据）；中文走系统 PingFang / Noto Sans SC
 - 内容：Astro Content Collections（Markdown + zod schema）
 
-## 本地编辑器（写博客用）
+## Jarvis · 站点控制台（本地）
 
 ```bash
 npm run editor     # → http://127.0.0.1:4400
 ```
 
-左边实时预览、右边 Markdown 源码，专为改文章设计：
+Jarvis 负责编程与建站，站点控制台是它的功能 01：在浏览器里浏览、编辑**整个仓库**的源码。
 
-- **双击左边任意段落 / 表格行** → 右边自动跳到对应源码行并选中整块
-- 光标在右边移动时，左边会虚线高亮对应的块（双向定位）
-- 实时渲染（防抖 220ms），预览顶部自动拼出文章头（期号 / 分类 / 标题）
-- `⌘S` / `Ctrl+S` 保存，或点右上角按钮；未保存时状态栏变黄，关页面会拦一下
-- 中间的分隔条可以拖动调整左右比例，键盘聚焦后 `←/→` 也能调
-- 直接读写 `src/content/blog/*.md(x)`；同时开着 `npm run dev` 的话，保存后会热更新
+```
+┌──────────┬──────────────────┬──────────────────┐
+│ 文件树    │ 预览（Markdown）  │ 源码              │
+└──────────┴──────────────────┴──────────────────┘
+```
 
-实现：`tools/editor/`（Node 原生 http + markdown-it，无前端框架），只监听 `127.0.0.1`，写入路径限定在 `src/content/blog`。预览样式复用 `dist/_astro` 里构建出的 CSS，所以**先 `npm run build` 一次**，预览才是真实排版；没构建时会退化成内置的简易样式。
+- **编辑范围**：`src/`、`tools/`、`docs/`、`public/`，以及根目录的 `astro.config.mjs` / `tsconfig.json` / `package.json` / `README.md`
+- **Markdown 专属能力**：实时渲染 + 双击预览跳到源码对应行（反之光标移动时预览高亮对应块）
+- **非 Markdown**（`.astro` / `.css` / `.ts` …）：自动收起预览栏，编辑器占满；保存后点「站点 ↗」看效果
+- `⌘P` 快速打开文件，`⌘S` 保存，`☰` 收起文件树，分隔条可拖
+- **安全**：只监听 `127.0.0.1`；路径经 `path.resolve` + 白名单校验，`node_modules` / `dist` / `.git` / `_backup` 与二进制文件一律拒绝
 
-行号映射的做法：markdown-it 的 token 自带 `map`（行区间），渲染时把它塞成 `data-line` / `data-endline`，再按 frontmatter 行数做偏移，双击时从 DOM 反查源码行。
+实现：`tools/editor/`（Node 原生 http + markdown-it，无前端框架）。预览样式复用 `dist/_astro` 里构建出的 CSS，所以**先 `npm run build` 一次**预览才是真实排版。
+
+行号映射：markdown-it 的 token 自带 `map`（行区间），渲染时写成 `data-line` / `data-endline`，再按 frontmatter 行数偏移；双击时从 DOM 反查源码行。
 
 ## 命令
 

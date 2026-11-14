@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * 本地博客编辑器
- * 左边实时预览、右边 Markdown 源码；双击预览可跳到对应源码行。
+ * Jarvis · 站点控制台
+ * 一个功能：可视化编辑整个站点源码。
+ *   - 左：文件树 / 中：预览（Markdown 实时渲染） / 右：源码
+ *   - 双击 Markdown 预览可跳到源码对应行
  *
  * 用法：
- *   npm run editor          # 默认 http://127.0.0.1:4400
+ *   npm run editor          # http://127.0.0.1:4400
  *   PORT=4500 npm run editor
- *
- * 它直接读写 src/content/blog/*.md(x)，保存后 Astro dev server 会自动热更新。
  */
 
 import { createServer } from "node:http";
@@ -18,19 +18,59 @@ import MarkdownIt from "markdown-it";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
-const BLOG_DIR = path.join(ROOT, "src", "content", "blog");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DIST_CSS_DIR = path.join(ROOT, "dist", "_astro");
 const PORT = Number(process.env.PORT || 4400);
+const SITE_PORT = Number(process.env.SITE_PORT || 4321);
 
-/* ---------------- Markdown 渲染（带源码行号映射） ---------------- */
+/** 允许编辑的顶层目录 / 根文件 */
+const ALLOWED_TOP_DIRS = new Set(["src", "public", "tools", "docs", ".github"]);
+const ALLOWED_ROOT_FILES = new Set([
+  "astro.config.mjs",
+  "tsconfig.json",
+  "package.json",
+  "README.md",
+]);
+
+/** 可编辑的文本扩展名 */
+const TEXT_EXT = new Set([
+  ".md",
+  ".mdx",
+  ".astro",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".css",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".html",
+  ".svg",
+  ".txt",
+  ".toml",
+]);
+
+const DENY_NAMES = new Set([
+  "node_modules",
+  "dist",
+  ".astro",
+  ".git",
+  "_backup",
+  ".npm-cache",
+  ".DS_Store",
+]);
+
+const MAX_BYTES = 1024 * 1024;
+
+/* ---------------- Markdown ---------------- */
 
 const md = new MarkdownIt({ html: true, linkify: true });
 
 const baseRenderToken = md.renderer.renderToken.bind(md.renderer);
 md.renderer.renderToken = (tokens, idx, options) => {
   const token = tokens[idx];
-  // map 是 [起始行, 结束行)，相对传给 md.render 的字符串
   if (token.map && token.block) {
     token.attrSet("data-line", String(token.map[0]));
     token.attrSet("data-endline", String(token.map[1]));
@@ -38,17 +78,16 @@ md.renderer.renderToken = (tokens, idx, options) => {
   return baseRenderToken(tokens, idx, options);
 };
 
-/** 分离 frontmatter，返回正文与正文起始行偏移 */
 function splitFrontmatter(raw) {
   const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  if (!m) return { fm: "", body: raw, offset: 0, meta: {} };
+  if (!m) return { body: raw, offset: 0, meta: {} };
   const offset = (m[0].match(/\n/g) || []).length;
   const meta = {};
   for (const line of m[1].split(/\r?\n/)) {
     const kv = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
     if (kv) meta[kv[1]] = kv[2].replace(/^["']|["']$/g, "");
   }
-  return { fm: m[0], body: raw.slice(m[0].length), offset, meta };
+  return { body: raw.slice(m[0].length), offset, meta };
 }
 
 function renderMarkdown(raw) {
@@ -59,11 +98,10 @@ function renderMarkdown(raw) {
       if (t.map) t.map = [t.map[0] + offset, t.map[1] + offset];
     }
   }
-  const html = md.renderer.render(tokens, md.options, {});
-  return { html, meta, offset };
+  return { html: md.renderer.render(tokens, md.options, {}), meta, offset };
 }
 
-/* ---------------- 站点 CSS（复用构建产物，预览才像真的） ---------------- */
+/* ---------------- 站点 CSS ---------------- */
 
 let cssCache = { mtime: 0, css: null };
 
@@ -87,18 +125,81 @@ async function siteCss() {
         return css;
       }
     }
-    if (candidates[0]) {
-      const css = await readFile(candidates[0].p, "utf8");
-      cssCache = { mtime: newest, css };
-      return css;
-    }
   } catch {
-    /* dist 还没构建 */
+    /* 还没构建 */
   }
   return null;
 }
 
-/* ---------------- 工具函数 ---------------- */
+/* ---------------- 路径安全 ---------------- */
+
+function safePath(rel) {
+  if (typeof rel !== "string" || !rel) return null;
+  const abs = path.resolve(ROOT, rel);
+  const relFromRoot = path.relative(ROOT, abs);
+  if (relFromRoot.startsWith("..") || path.isAbsolute(relFromRoot)) return null;
+  if (!relFromRoot) return null;
+
+  const segments = relFromRoot.split(path.sep);
+  for (const seg of segments) {
+    if (DENY_NAMES.has(seg)) return null;
+  }
+  if (segments.some((s) => s.startsWith(".") && s !== ".github")) return null;
+
+  if (segments.length === 1) {
+    if (!ALLOWED_ROOT_FILES.has(segments[0])) return null;
+  } else if (!ALLOWED_TOP_DIRS.has(segments[0])) {
+    return null;
+  }
+
+  if (!TEXT_EXT.has(path.extname(relFromRoot).toLowerCase())) return null;
+  return { abs, rel: relFromRoot.split(path.sep).join("/") };
+}
+
+/* ---------------- 文件树 ---------------- */
+
+async function walk(dir, depth = 0, out = []) {
+  if (depth > 7) return out;
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const e of entries) {
+    if (DENY_NAMES.has(e.name)) continue;
+    if (e.name.startsWith(".") && e.name !== ".github") continue;
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      await walk(abs, depth + 1, out);
+    } else if (TEXT_EXT.has(path.extname(e.name).toLowerCase())) {
+      const st = await stat(abs).catch(() => null);
+      if (st && st.size <= MAX_BYTES) {
+        out.push({
+          path: path.relative(ROOT, abs).split(path.sep).join("/"),
+          size: st.size,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+async function fileTree() {
+  const out = [];
+  for (const dir of ALLOWED_TOP_DIRS) {
+    await walk(path.join(ROOT, dir), 0, out);
+  }
+  for (const f of ALLOWED_ROOT_FILES) {
+    const abs = path.join(ROOT, f);
+    const st = await stat(abs).catch(() => null);
+    if (st) out.push({ path: f, size: st.size });
+  }
+  out.sort((a, b) => a.path.localeCompare(b.path));
+  return out;
+}
+
+/* ---------------- HTTP 工具 ---------------- */
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -110,12 +211,11 @@ const MIME = {
 };
 
 const json = (res, code, data) => {
-  const body = JSON.stringify(data);
   res.writeHead(code, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
   });
-  res.end(body);
+  res.end(JSON.stringify(data));
 };
 
 const readBody = (req) =>
@@ -135,56 +235,41 @@ const readBody = (req) =>
     req.on("error", reject);
   });
 
-/** 只允许编辑 content/blog 下的文件 */
-function safeBlogPath(file) {
-  if (typeof file !== "string" || !file) return null;
-  if (!/\.(md|mdx)$/i.test(file)) return null;
-  const abs = path.resolve(BLOG_DIR, file);
-  const rel = path.relative(BLOG_DIR, abs);
-  if (rel.startsWith("..") || path.isAbsolute(rel)) return null;
-  return abs;
-}
-
-async function listPosts() {
-  const files = await readdir(BLOG_DIR);
-  const posts = [];
-  for (const f of files) {
-    if (!/\.(md|mdx)$/i.test(f)) continue;
-    const abs = path.join(BLOG_DIR, f);
-    const st = await stat(abs);
-    const raw = await readFile(abs, "utf8");
-    const { meta } = splitFrontmatter(raw);
-    posts.push({
-      file: f,
-      title: meta.title || f,
-      issue: Number(meta.issue || 0),
-      cat: meta.cat || "tools",
-      updated: meta.updated === "true",
-      bytes: st.size,
-      mtime: st.mtimeMs,
-    });
-  }
-  posts.sort((a, b) => b.issue - a.issue || a.title.localeCompare(b.title));
-  return posts;
-}
-
-/* ---------------- HTTP ---------------- */
+/* ---------------- 路由 ---------------- */
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(url.pathname);
 
   try {
-    /* --- API --- */
-    if (pathname === "/api/posts" && req.method === "GET") {
-      return json(res, 200, { posts: await listPosts() });
+    if (pathname === "/api/tree" && req.method === "GET") {
+      return json(res, 200, { root: ROOT, files: await fileTree() });
     }
 
-    if (pathname === "/api/post" && req.method === "GET") {
-      const abs = safeBlogPath(url.searchParams.get("file"));
-      if (!abs) return json(res, 400, { error: "bad file" });
-      const raw = await readFile(abs, "utf8");
-      return json(res, 200, { file: path.basename(abs), raw });
+    if (pathname === "/api/file" && req.method === "GET") {
+      const target = safePath(url.searchParams.get("path"));
+      if (!target) return json(res, 400, { error: "bad path" });
+      const raw = await readFile(target.abs, "utf8");
+      const st = await stat(target.abs);
+      return json(res, 200, {
+        path: target.rel,
+        content: raw,
+        size: st.size,
+        mtime: st.mtimeMs,
+      });
+    }
+
+    if (pathname === "/api/save" && req.method === "POST") {
+      const body = JSON.parse(await readBody(req));
+      const target = safePath(body.path);
+      if (!target) return json(res, 400, { error: "bad path" });
+      if (typeof body.content !== "string") {
+        return json(res, 400, { error: "content required" });
+      }
+      await writeFile(target.abs, body.content, "utf8");
+      const st = await stat(target.abs);
+      console.log(`[jarvis] saved ${target.rel} (${st.size} B)`);
+      return json(res, 200, { ok: true, mtime: st.mtimeMs, size: st.size });
     }
 
     if (pathname === "/api/render" && req.method === "POST") {
@@ -192,28 +277,14 @@ const server = createServer(async (req, res) => {
       if (typeof body.content !== "string") {
         return json(res, 400, { error: "content required" });
       }
-      const out = renderMarkdown(body.content);
-      return json(res, 200, out);
-    }
-
-    if (pathname === "/api/save" && req.method === "POST") {
-      const body = JSON.parse(await readBody(req));
-      const abs = safeBlogPath(body.file);
-      if (!abs) return json(res, 400, { error: "bad file" });
-      if (typeof body.content !== "string") {
-        return json(res, 400, { error: "content required" });
-      }
-      await writeFile(abs, body.content, "utf8");
-      const st = await stat(abs);
-      console.log(`[editor] saved ${path.basename(abs)} (${st.size} B)`);
-      return json(res, 200, { ok: true, mtime: st.mtimeMs, bytes: st.size });
+      return json(res, 200, renderMarkdown(body.content));
     }
 
     if (pathname === "/site.css") {
       const css = await siteCss();
       if (!css) {
         res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-        return res.end("/* dist 还没构建，预览将使用内置的降级样式 */");
+        return res.end("/* dist 还没构建 */");
       }
       res.writeHead(200, {
         "Content-Type": "text/css; charset=utf-8",
@@ -223,15 +294,16 @@ const server = createServer(async (req, res) => {
     }
 
     if (pathname === "/api/health") {
-      const css = await siteCss();
       return json(res, 200, {
         ok: true,
-        blogDir: BLOG_DIR,
-        siteCss: Boolean(css),
+        root: ROOT,
+        sitePort: SITE_PORT,
+        siteCss: Boolean(await siteCss()),
+        files: (await fileTree()).length,
       });
     }
 
-    /* --- 静态文件 --- */
+    /* 静态 */
     const rel = pathname === "/" ? "/index.html" : pathname;
     const file = path.resolve(PUBLIC_DIR, "." + rel);
     if (!file.startsWith(PUBLIC_DIR)) {
@@ -249,13 +321,13 @@ const server = createServer(async (req, res) => {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end("404");
     }
-    console.error("[editor]", err);
+    console.error("[jarvis]", err);
     json(res, 500, { error: String(err?.message || err) });
   }
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`\n  616 blog editor  →  http://127.0.0.1:${PORT}`);
-  console.log(`  编辑目录          →  ${BLOG_DIR}`);
-  console.log(`  预览样式          →  dist/_astro（先 npm run build 才有真实排版）\n`);
+  console.log(`\n  Jarvis · 站点控制台  →  http://127.0.0.1:${PORT}`);
+  console.log(`  可编辑范围            →  src / public / tools / docs / 根配置文件`);
+  console.log(`  本地站点              →  http://127.0.0.1:${SITE_PORT}\n`);
 });
