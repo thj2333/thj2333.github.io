@@ -2,8 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { assistants, stones, gen3d } from "../data/tools";
-import { films, heroes, releasedCount, series } from "../data/mcu";
-import { legacyTotal } from "../data/legacy";
+import { universes, totalLandmarks } from "../data/multiverse";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.issue - a.data.issue,
@@ -50,26 +49,24 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
         <p
           class="mt-6 max-w-md text-[0.95rem] font-bold leading-relaxed text-[var(--color-ink-soft)]"
         >
-          主宇宙档案库。收着 MCU 全部院线电影与英雄名册、几期还没写完的博客，以及一柜子尚未造出来的工具。
+          主宇宙档案库。一张多元宇宙地图、几期还在长的博客——包括那份会一直更新的 AI 工具清单——还有一柜子尚未造出来的工具。
         </p>
 
         <div
           class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.62rem] tracking-[0.14em] text-[var(--color-ink-soft)]"
         >
-          <span>影片 {films.length}</span>
+          <span>宇宙 {universes.length}</span>
           <span aria-hidden="true">·</span>
-          <span>剧集 {series.length}</span>
+          <span>地标 {totalLandmarks}</span>
           <span aria-hidden="true">·</span>
-          <span>英雄 {heroes.length}</span>
-          <span aria-hidden="true">·</span>
-          <span>别册 {legacyTotal}</span>
+          <span>博客 {posts.length} 期</span>
           <span aria-hidden="true">·</span>
           <span>工具 03 组</span>
         </div>
 
         <div class="mt-7 flex flex-wrap items-center gap-3">
           <a href="/archive" class="btn-616">
-            <span>进入档案库</span>
+            <span>打开宇宙地图</span>
             <span aria-hidden="true">→</span>
           </a>
           <a href="/armory" class="btn-616 btn-ghost">
@@ -120,9 +117,8 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
         <div
           class="mt-4 space-y-1 border-y border-[var(--color-hud)]/25 py-3 font-mono text-[0.64rem] leading-relaxed text-[var(--color-hud)]/70"
         >
-          <p>&gt; mount /archive ... ok</p>
-          <p>&nbsp;&nbsp;films {films.length} · heroes {heroes.length}</p>
-          <p>&nbsp;&nbsp;series {series.length} · specials 3</p>
+          <p>&gt; mount /multiverse ... ok</p>
+          <p>&nbsp;&nbsp;earths {universes.length} · landmarks {totalLandmarks}</p>
           <p>&gt; mount /blog ... ok ({posts.length} issues)</p>
           <p>&gt; mount /armory ... 03 modules</p>
           <p>&gt; gem array ... 6/6 LOCKED</p>
@@ -137,9 +133,9 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
             >
               <span class="font-mono text-[0.6rem] text-[var(--color-hud)]/55">01</span>
               <span class="flex-1 text-[0.84rem] font-bold transition-colors group-hover:text-[var(--color-hud)]">
-                MCU 档案
+                多元宇宙地图
               </span>
-              <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">{films.length}</span>
+              <span class="font-mono text-[0.55rem] text-[var(--color-hud)]/40">{universes.length}</span>
             </a>
           </li>
           <li>
@@ -174,8 +170,8 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
               <span class="radar-sweep"></span>
             </div>
             <div class="font-mono text-[0.55rem] leading-relaxed tracking-[0.14em] text-[var(--color-hud)]/45">
-              <p>EARTH-199999 / SECTOR</p>
-              <p>FILMS {films.length} · SERIES {series.length}</p>
+              <p>MULTIVERSE / SECTOR 07</p>
+              <p>EARTHS {universes.length} · LANDMARKS {totalLandmarks}</p>
               <p class="text-[var(--color-hud)]/70">NO ANOMALY</p>
             </div>
           </div>
@@ -223,8 +219,15 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
               {p.data.excerpt}
             </p>
             <div class="mt-4 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-3">
-              <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
-                {p.data.category}
+              <span class="flex items-center gap-1.5">
+                <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
+                  {p.data.category}
+                </span>
+                {p.data.updated && (
+                  <span class="border-2 border-[var(--color-ink)] bg-[var(--color-hero)] px-1.5 py-0.5 font-mono text-[0.48rem] font-bold text-[var(--color-paper-hi)]">
+                    更新中
+                  </span>
+                )}
               </span>
               <span class="font-mono text-[0.62rem] tracking-[0.14em] opacity-0 transition-opacity group-hover:opacity-100">
                 阅读 →
@@ -246,18 +249,18 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
       >
       </div>
       <div class="relative">
-        <span class="font-mono text-[0.58rem] tracking-[0.2em] opacity-70">MCU 档案速览</span>
+        <span class="font-mono text-[0.58rem] tracking-[0.2em] opacity-70">多元宇宙速览</span>
         <div class="mt-3 flex items-end gap-3">
-          <span class="display text-6xl leading-none">{films.length}</span>
-          <span class="pb-1 text-[0.72rem] font-bold opacity-80">部院线电影</span>
+          <span class="display text-6xl leading-none">{universes.length}</span>
+          <span class="pb-1 text-[0.72rem] font-bold opacity-80">个宇宙</span>
         </div>
         <div class="mt-2 flex items-end gap-3">
-          <span class="display text-6xl leading-none">{heroes.length}</span>
-          <span class="pb-1 text-[0.72rem] font-bold opacity-80">位英雄</span>
+          <span class="display text-6xl leading-none">{totalLandmarks}</span>
+          <span class="pb-1 text-[0.72rem] font-bold opacity-80">处地标</span>
         </div>
       </div>
       <div class="relative mt-5 flex items-center justify-between border-t-2 border-[var(--color-paper-hi)]/40 pt-3">
-        <span class="font-mono text-[0.62rem] tracking-[0.14em]">199999 / 全部已上映</span>
+        <span class="font-mono text-[0.62rem] tracking-[0.14em]">616 / 838 / 199999 / 10005</span>
         <span class="display text-lg">翻档案 →</span>
       </div>
     </a>

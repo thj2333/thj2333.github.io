@@ -42,6 +42,12 @@ const toc = headings.filter((h) => h.depth === 2);
       <div class="flex flex-wrap items-center gap-2.5">
         <span class="sticker text-[0.7rem]">ISSUE #{issueNo(post.data.issue)}</span>
         <span class="caption">{post.data.category}</span>
+        {post.data.updated && (
+          <span class="flex items-center gap-1.5 border-[3px] border-[var(--color-ink)] bg-[var(--color-hero)] px-2 py-0.5 font-mono text-[0.6rem] font-bold text-[var(--color-paper-hi)] shadow-[2px_2px_0_0_var(--color-ink)]">
+            <span class="h-1.5 w-1.5 bg-[var(--color-paper-hi)] blink" />
+            持续更新
+          </span>
+        )}
         <span class="font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
           {fmt(post.data.date)}
         </span>
@@ -93,7 +99,11 @@ const toc = headings.filter((h) => h.depth === 2);
       <div
         class:list={[
           "prose-616",
-          toc.length > 1 ? "lg:col-span-9" : "lg:col-span-12 max-w-3xl",
+          toc.length > 1
+            ? "lg:col-span-9"
+            : post.data.wide
+              ? "lg:col-span-12"
+              : "lg:col-span-12 max-w-3xl",
         ]}
       >
         <Content />

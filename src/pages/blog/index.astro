@@ -24,7 +24,7 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
       随笔<span class="text-[var(--color-hero)]">与</span>笔记
     </h1>
     <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      技术、论文、以及一些没想明白的问题。目前 {posts.length} 期，都还是占位。
+      技术、论文与工具清单。目前 {posts.length} 期，其中 AI 工具那份会一直更新。
     </p>
   </header>
 
@@ -51,8 +51,16 @@ const issueNo = (n: number) => String(n).padStart(3, "0");
               {p.data.excerpt}
             </p>
             <div class="mt-4 flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/30 pt-3">
-              <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
-                {p.data.category}
+              <span class="flex items-center gap-1.5">
+                <span class="label bg-[var(--color-ink)] px-2 py-0.5 text-[var(--color-paper-hi)]">
+                  {p.data.category}
+                </span>
+                {p.data.updated && (
+                  <span class="flex items-center gap-1 border-2 border-[var(--color-ink)] bg-[var(--color-hero)] px-1.5 py-0.5 font-mono text-[0.5rem] font-bold text-[var(--color-paper-hi)]">
+                    <span class="h-1 w-1 bg-[var(--color-paper-hi)] blink" />
+                    持续更新
+                  </span>
+                )}
               </span>
               <span class="font-mono text-[0.62rem] tracking-[0.14em] opacity-0 transition-opacity group-hover:opacity-100">
                 阅读 →

@@ -1,0 +1,112 @@
+---
+import { phases, filmsOfPhase, films, series, seriesOfKind, seriesOnline } from "../data/mcu";
+
+const pad = (n: number) => String(n).padStart(3, "0");
+const fmtSeason = (s?: number) => (s ? `${s} 季` : "特辑");
+---
+
+<div class="mt-2">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <span class="caption">影片 {films.length} · 剧集 {series.length}</span>
+    <span class="caption">已上线 {seriesOnline}</span>
+    <span class="caption">六个阶段</span>
+  </div>
+
+  <!-- 电影 -->
+  <div class="mt-6 mb-3 flex items-center gap-3">
+    <h3 class="display text-2xl">一、院线电影</h3>
+    <div class="rule-heavy flex-1"></div>
+  </div>
+
+  <div class="space-y-7">
+    {
+      phases.map((ph) => (
+        <div>
+          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b-[3px] border-[var(--color-ink)] pb-2">
+            <span class="display text-3xl leading-none text-[var(--color-hero)]">
+              {String(ph.n).padStart(2, "0")}
+            </span>
+            <span class="display text-lg">{ph.name}</span>
+            <span class="label text-[var(--color-ink-soft)]">{ph.saga}</span>
+            <span class="ml-auto font-mono text-[0.6rem] tracking-[0.14em] text-[var(--color-ink-soft)]">
+              {ph.span}
+            </span>
+          </div>
+
+          {filmsOfPhase(ph.n).map((f, i) => (
+            <div class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-[7px] transition-colors hover:border-[var(--color-ink)]">
+              <span class="w-11 shrink-0 font-mono text-[0.64rem] text-[var(--color-ink-soft)]">
+                {f.year}
+              </span>
+              <span class="w-5 shrink-0 font-mono text-[0.5rem] text-[var(--color-ink)]/30">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-[0.88rem] font-bold leading-snug group-hover:text-[var(--color-hero)]">
+                  {f.cn}
+                </span>
+                <span class="block truncate font-mono text-[0.58rem] text-[var(--color-ink-soft)]/70">
+                  {f.en}
+                </span>
+              </span>
+              {!f.out && (
+                <span class="shrink-0 -rotate-3 border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1 py-0.5 font-mono text-[0.5rem] font-bold">
+                  待映
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- 剧集 -->
+  <div class="mt-9 mb-3 flex items-center gap-3">
+    <h3 class="display text-2xl">二、Disney+ 剧集</h3>
+    <div class="rule-heavy flex-1"></div>
+  </div>
+
+  <div class="space-y-6">
+    {
+      (["真人", "动画", "特辑"] as const).map((kind) => {
+        const list = seriesOfKind(kind);
+        return (
+          <div>
+            <div class="mb-2 flex items-center gap-2">
+              <span class="h-2 w-2 rotate-45 bg-[var(--color-ink)]" />
+              <span class="text-[0.86rem] font-extrabold">
+                {kind === "特辑" ? "电视特辑" : `${kind}剧集`}
+              </span>
+              <span class="font-mono text-[0.58rem] text-[var(--color-ink-soft)]">
+                {list.length}
+              </span>
+            </div>
+            {list.map((it) => (
+              <div class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-[6px] hover:border-[var(--color-ink)]">
+                <span class="w-11 shrink-0 font-mono text-[0.62rem] text-[var(--color-ink-soft)]">
+                  {it.year}
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="text-[0.85rem] font-bold group-hover:text-[var(--color-hero)]">
+                    {it.cn}
+                  </span>
+                  <span class="ml-2 font-mono text-[0.56rem] text-[var(--color-ink-soft)]/70">
+                    {it.en}
+                  </span>
+                </span>
+                <span class="shrink-0 font-mono text-[0.55rem] text-[var(--color-ink)]/45">
+                  {it.out ? fmtSeason(it.season) : "待播"}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      })
+    }
+  </div>
+
+  <p class="mt-5 font-mono text-[0.6rem] leading-relaxed text-[var(--color-ink-soft)]">
+    // 统计截至 2026.11 · 完整宇宙地图见 <a href="/archive" class="underline">多元宇宙地图</a>
+  </p>
+</div>

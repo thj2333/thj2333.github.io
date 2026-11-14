@@ -1,41 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
-import {
-  phases,
-  filmsOfPhase,
-  heroes,
-  releasedCount,
-  upcomingCount,
-  films,
-  series,
-  seriesOfKind,
-  seriesOnline,
-} from "../../data/mcu";
-import {
-  legacyGroups,
-  legacyTotal,
-  legacyFilms,
-  legacySeries,
-} from "../../data/legacy";
-
-const pad = (n: number) => String(n).padStart(3, "0");
-
-const kindMeta = {
-  真人: { label: "真人剧集", en: "LIVE ACTION", accent: "var(--color-hero)" },
-  动画: { label: "动画剧集", en: "ANIMATION", accent: "var(--color-cape)" },
-  特辑: { label: "特辑", en: "SPECIALS", accent: "var(--color-reactor)" },
-} as const;
-
-const phaseTone: Record<number, string> = {
-  4: "bg-[var(--color-reactor)] text-[var(--color-ink)]",
-  5: "bg-[var(--color-cape)] text-[var(--color-paper-hi)]",
-  6: "bg-[var(--color-hero)] text-[var(--color-paper-hi)]",
-};
+import { universes, totalLandmarks } from "../../data/multiverse";
 ---
 
 <Base
-  period="MCU 档案"
-  description="MCU 档案：地球-199999 的院线电影年表与超级英雄名册。"
+  period="多元宇宙地图"
+  description="地球 616 的多元宇宙地图：主宇宙、MCU 宇宙、光照会宇宙、X 战警宇宙，四套地标与版式。"
 >
   <header class="relative overflow-hidden border-b-[3px] border-[var(--color-ink)] pb-5">
     <div
@@ -43,307 +13,549 @@ const phaseTone: Record<number, string> = {
       aria-hidden="true"
     >
     </div>
-    <span class="caption rise d1">档案 / ARCHIVE</span>
+    <span class="caption rise d1">地图 / MULTIVERSE MAP</span>
     <h1 class="display rise d2 mt-3 text-5xl sm:text-7xl">
-      MCU <span class="text-[var(--color-hero)]">档案</span>
+      宇宙<span class="text-[var(--color-hero)]">地图</span>
     </h1>
-    <p class="mt-3 max-w-2xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
-      按本刊设定，这里是 616 隔壁那条分支——地球-199999。收录全部院线电影、Disney+ 剧集与特辑、主要英雄名册，并在末尾附一册「非 MCU」作品。
+    <p class="mt-3 max-w-xl text-sm font-bold leading-relaxed text-[var(--color-ink-soft)]">
+      不只一个地球。每个宇宙有自己的规矩，也有自己的地图画法——换个宇宙，纸和笔都得换。
     </p>
     <div class="mt-4 flex flex-wrap items-center gap-2">
-      <span class="caption">影片 {films.length}</span>
-      <span class="caption">剧集 {series.length}</span>
-      <span class="caption">英雄 {heroes.length}</span>
-      <span class="caption">已上映 {releasedCount}</span>
-      <span class="caption">待映 {upcomingCount}</span>
-      <span class="caption">别册 {legacyTotal}</span>
-      <a
-        href="#legacy"
-        class="border-[3px] border-[var(--color-ink)] bg-[var(--color-ink)] px-2 py-0.5 font-mono text-[0.68rem] font-bold tracking-[0.12em] text-[var(--color-paper-hi)] shadow-[3px_3px_0_0_var(--color-ink)] hover:bg-[var(--color-hero)]"
-        >非 MCU 别册 ↓</a
-      >
+      <span class="caption">宇宙 {universes.length}</span>
+      <span class="caption">地标 {totalLandmarks}</span>
+      <span class="caption">四套版式</span>
     </div>
   </header>
 
-  <!-- ═══ 电影年表 ═══ -->
-  <section class="mt-10">
-    <div class="mb-5 flex items-center gap-4">
-      <h2 class="display text-3xl">电影年表</h2>
-      <div class="rule-heavy flex-1"></div>
-      <span class="label text-[var(--color-ink-soft)]">FILMOGRAPHY</span>
-    </div>
+  <div class="mv mt-6">
+    {
+      universes.map((u, i) => (
+        <input
+          type="radio"
+          name="mv"
+          id={`mv-${u.id}`}
+          class="mv-radio"
+          checked={i === 0}
+          aria-label={`切换到 ${u.code} ${u.name}`}
+        />
+      ))
+    }
 
-    <div class="space-y-8">
+    <div class="mv-tabs">
       {
-        phases.map((ph) => (
-          <div class="rise d2">
-            <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b-[3px] border-[var(--color-ink)] pb-2">
-              <span class="display text-4xl leading-none text-[var(--color-hero)]">
-                {String(ph.n).padStart(2, "0")}
-              </span>
-              <span class="display text-xl">{ph.name}</span>
-              <span class="label text-[var(--color-ink-soft)]">{ph.saga}</span>
-              <span class="ml-auto font-mono text-[0.62rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
-                {ph.span}
-              </span>
-            </div>
-
-            <ul>
-              {filmsOfPhase(ph.n).map((f, i) => (
-                <li class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-2.5 transition-colors hover:border-[var(--color-ink)] sm:gap-5">
-                  <span class="w-11 shrink-0 font-mono text-[0.68rem] tracking-[0.08em] text-[var(--color-ink-soft)]">
-                    {f.year}
-                  </span>
-                  <span class="w-6 shrink-0 font-mono text-[0.55rem] text-[var(--color-ink)]/30">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block text-[0.92rem] font-bold leading-snug transition-colors group-hover:text-[var(--color-hero)]">
-                      {f.cn}
-                    </span>
-                    <span class="block truncate font-mono text-[0.62rem] tracking-[0.06em] text-[var(--color-ink-soft)]/70">
-                      {f.en}
-                    </span>
-                  </span>
-                  {!f.out && (
-                    <span class="shrink-0 rotate-[-3deg] border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1.5 py-0.5 font-mono text-[0.55rem] font-bold">
-                      待映{f.note ? ` ${f.note}` : ""}
-                    </span>
-                  )}
-                  {f.out && (
-                    <span class="shrink-0 font-mono text-[0.55rem] tracking-[0.1em] text-[var(--color-ink)]/35">
-                      已上映
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+        universes.map((u) => (
+          <label for={`mv-${u.id}`} id={`tab-${u.id}`} class="mv-tab">
+            <span class="mv-tab-code">{u.code}</span>
+            <span class="mv-tab-name">{u.name}</span>
+          </label>
         ))
       }
     </div>
-  </section>
 
-  <!-- ═══ 剧集与特辑 ═══ -->
-  <section class="mt-14">
-    <div class="mb-5 flex flex-wrap items-center gap-4">
-      <h2 class="display text-3xl">剧集与特辑</h2>
-      <div class="rule-heavy flex-1"></div>
-      <span class="label text-[var(--color-ink-soft)]"
-        >SERIES / {pad(series.length)}</span
-      >
-    </div>
-
-    <p class="mb-6 max-w-2xl text-sm leading-relaxed text-[var(--color-ink-soft)]">
-      Disney+ 剧集与特辑，按类型分三组。季数为累计值，统计截至 2026.11；已上线 {seriesOnline} 部，1 部待播。
-    </p>
-
-    <div class="space-y-8">
+    <div class="mv-panels">
       {
-        (["真人", "动画", "特辑"] as const).map((kind) => {
-          const meta = kindMeta[kind];
-          const list = seriesOfKind(kind);
-          return (
-            <div>
-              <div class="mb-3 flex items-center gap-3">
-                <span
-                  class="h-2.5 w-2.5 rotate-45"
-                  style={`background:${meta.accent}`}
-                  aria-hidden="true"
-                />
-                <h3 class="text-[0.95rem] font-extrabold">{meta.label}</h3>
-                <span class="label text-[var(--color-ink-soft)]">{meta.en}</span>
-                <div class="h-[2px] flex-1 bg-[var(--color-ink)]/20" />
-                <span class="font-mono text-[0.6rem] text-[var(--color-ink-soft)]">
-                  {list.length}
-                </span>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {list.map((it, i) => (
-                  <article
-                    class={`panel panel-hover flex flex-col overflow-hidden rise d${Math.min((i % 6) + 1, 6)}`}
-                  >
-                    <div class="flex items-center justify-between px-3 py-1.5">
-                      <span class="font-mono text-[0.6rem] tracking-[0.1em] text-[var(--color-ink-soft)]">
-                        {it.year}
-                      </span>
-                      <span
-                        class:list={[
-                          "border-2 border-[var(--color-ink)] px-1 py-0.5 font-mono text-[0.5rem] font-bold",
-                          phaseTone[it.phase],
-                        ]}
-                      >
-                        P{it.phase}
-                      </span>
-                    </div>
-
-                    <div class="flex-1 px-3 pb-2">
-                      <h4 class="text-[0.92rem] font-extrabold leading-snug">
-                        {it.cn}
-                      </h4>
-                      <p class="mt-0.5 font-mono text-[0.58rem] leading-relaxed text-[var(--color-ink-soft)]/75">
-                        {it.en}
-                      </p>
-                    </div>
-
-                    <div class="flex items-center justify-between border-t-2 border-dashed border-[var(--color-ink)]/25 px-3 py-1.5">
-                      <span class="font-mono text-[0.55rem] text-[var(--color-ink-soft)]">
-                        {it.kind === "特辑" ? "电视特辑" : `${it.season} 季`}
-                      </span>
-                      <span
-                        class:list={[
-                          "font-mono text-[0.52rem] tracking-[0.1em]",
-                          it.out
-                            ? "text-[var(--color-ink)]/45"
-                            : "bg-[var(--color-reactor)] px-1 font-bold text-[var(--color-ink)]",
-                        ]}
-                      >
-                        {it.out ? "已上线" : "待播"}
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          );
-        })
-      }
-    </div>
-  </section>
-
-  <!-- ═══ 英雄名册 ═══ -->
-  <section class="mt-14">
-    <div class="mb-5 flex items-center gap-4">
-      <h2 class="display text-3xl">英雄名册</h2>
-      <div class="rule-heavy flex-1"></div>
-      <span class="label text-[var(--color-ink-soft)]">ROSTER / {pad(heroes.length)}</span>
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {
-        heroes.map((h, i) => (
-          <article class={`panel panel-hover rise d${Math.min((i % 6) + 1, 6)}`}>
-            <div class="h-1.5" style={`background:${h.accent}`} aria-hidden="true" />
-            <div class="flex items-start gap-3 p-4">
-              <div
-                class="grid h-14 w-14 shrink-0 place-items-center border-[3px] border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]"
-                style={`background:${h.accent}`}
-                aria-hidden="true"
-              >
-                <span class="display text-2xl text-[var(--color-paper-hi)]">
-                  {h.en.charAt(0)}
-                </span>
-              </div>
-
-              <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-2">
-                  <h3 class="text-[0.98rem] font-extrabold leading-tight">{h.cn}</h3>
-                  <span
-                    class:list={[
-                      "shrink-0 -rotate-2 border-2 border-[var(--color-ink)] px-1 py-0.5 font-mono text-[0.5rem] font-bold",
-                      h.status === "牺牲" && "bg-[var(--color-ink)] text-[var(--color-paper-hi)]",
-                      h.status === "退役" && "bg-[var(--color-paper-lo)]",
-                      h.status === "在世" && "bg-[var(--color-reactor)]",
-                      h.status === "未知" && "bg-[var(--color-paper-lo)]",
-                    ]}
-                  >
-                    {h.status}
+        universes.map((u) => (
+          <section class="mv-panel" data-u={u.id}>
+            <div class="grid gap-4 lg:grid-cols-12">
+              <div class="lg:col-span-8">
+                <div class={`map map--${u.theme}`}>
+                  <span class="map-meta" aria-hidden="true">
+                    {u.coord}
                   </span>
-                </div>
-                <p class="mt-0.5 font-mono text-[0.6rem] tracking-[0.04em] text-[var(--color-ink-soft)]">
-                  {h.alias}
-                </p>
-                <p class="mt-1.5 font-mono text-[0.56rem] tracking-[0.04em] text-[var(--color-ink)]/45">
-                  {h.debut}
-                </p>
-                <div class="mt-2 flex flex-wrap gap-1">
-                  {h.powers.map((p) => (
-                    <span class="border border-[var(--color-ink)]/40 px-1 py-0.5 font-mono text-[0.52rem]">
-                      {p}
+                  <span class="map-scale" aria-hidden="true">
+                    <i />
+                  </span>
+
+                  {u.landmarks.map((l, i) => (
+                    <span
+                      class="pin"
+                      style={`left:${l.x}%;top:${l.y}%`}
+                      data-side={l.side ?? "right"}
+                    >
+                      <span class="pin-dot" data-i={i + 1} aria-hidden="true" />
+                      <span class="pin-label">
+                        <b>{String(i + 1).padStart(2, "0")}</b>
+                        {l.name}
+                      </span>
                     </span>
                   ))}
                 </div>
               </div>
+
+              <aside class="lg:col-span-4">
+                <div class="panel p-4">
+                  <div class="flex items-center justify-between">
+                    <span class="font-mono text-[0.58rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
+                      {u.code}
+                    </span>
+                    <span
+                      class="h-2.5 w-2.5 rotate-45 border border-[var(--color-ink)]"
+                      style={`background:${u.accent}`}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <h2 class="display mt-1.5 text-3xl leading-none">{u.name}</h2>
+                  <p class="label mt-1 text-[var(--color-ink-soft)]">{u.en}</p>
+                  <p
+                    class="mt-2 inline-block border-2 border-[var(--color-ink)] bg-[var(--color-reactor)] px-1.5 py-0.5 font-mono text-[0.55rem] font-bold"
+                  >
+                    {u.tag}
+                  </p>
+                  <p class="mt-3 text-[0.8rem] leading-relaxed text-[var(--color-ink-soft)]">
+                    {u.desc}
+                  </p>
+                </div>
+
+                <ol class="mt-3 space-y-0">
+                  {u.landmarks.map((l, i) => (
+                    <li class="flex gap-2.5 border-b border-dashed border-[var(--color-ink)]/25 py-2">
+                      <span class="mt-0.5 w-4 shrink-0 font-mono text-[0.58rem] text-[var(--color-hero)]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="flex flex-wrap items-baseline gap-x-2">
+                          <b class="text-[0.82rem] leading-snug">{l.name}</b>
+                          <span class="font-mono text-[0.52rem] uppercase tracking-[0.1em] text-[var(--color-ink-soft)]/70">
+                            {l.en}
+                          </span>
+                        </span>
+                        <span class="mt-0.5 block text-[0.7rem] leading-relaxed text-[var(--color-ink-soft)]">
+                          {l.desc}
+                        </span>
+                      </span>
+                      <span class="h-fit shrink-0 border border-[var(--color-ink)]/40 px-1 font-mono text-[0.48rem]">
+                        {l.kind}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </aside>
             </div>
-            <div class="border-t-2 border-[var(--color-ink)] bg-[var(--color-paper-lo)] px-4 py-1 font-mono text-[0.55rem] tracking-[0.16em] text-[var(--color-ink-soft)]">
-              {h.team}
-            </div>
-          </article>
+          </section>
         ))
       }
     </div>
-  </section>
+  </div>
 
-  <!-- ═══ 别册：非 MCU ═══ -->
-  <section id="legacy" class="mt-16 scroll-mt-28">
-    <div class="mb-5 flex flex-wrap items-center gap-4">
-      <h2 class="display text-3xl">非 MCU 别册</h2>
-      <div class="rule-heavy flex-1"></div>
-      <span class="label text-[var(--color-ink-soft)]">ELSEWHERE / {pad(legacyTotal)}</span>
-    </div>
-
-    <div class="mb-7 border-l-4 border-[var(--color-hero)] bg-[var(--color-paper-lo)] py-3 pl-4 pr-3">
-      <p class="text-sm leading-relaxed text-[var(--color-ink-soft)]">
-        这些作品都不在地球-199999 里：有的属于福克斯、索尼各自的宇宙，有的出自漫威电视的旧年。
-        放在这一册只作参照，不算本刊正史。共 {legacyTotal} 部（电影 {legacyFilms}、剧集 {legacySeries}）。
-      </p>
-    </div>
-
-    <div class="space-y-9">
-      {
-        legacyGroups.map((g, gi) => (
-          <div class={`rise d${Math.min(gi + 1, 6)}`}>
-            <div class="mb-1.5 flex flex-wrap items-center gap-3">
-              <span
-                class="h-3 w-3 shrink-0 rotate-45 border border-[var(--color-ink)]"
-                style={`background:${g.accent}`}
-                aria-hidden="true"
-              />
-              <h3 class="text-[0.98rem] font-extrabold">{g.label}</h3>
-              <span class="label text-[var(--color-ink-soft)]">{g.en}</span>
-              <div class="h-[2px] flex-1 bg-[var(--color-ink)]/20" />
-              <span class="font-mono text-[0.6rem] text-[var(--color-ink-soft)]">
-                {g.items.length}
-              </span>
-            </div>
-            <p class="mb-2 text-[0.72rem] text-[var(--color-ink-soft)]/80">{g.note}</p>
-
-            <ul>
-              {g.items.map((it, i) => (
-                <li class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-[7px] transition-colors hover:border-[var(--color-ink)] sm:gap-4">
-                  <span class="w-11 shrink-0 font-mono text-[0.66rem] tracking-[0.08em] text-[var(--color-ink-soft)]">
-                    {it.year}
-                  </span>
-                  <span class="w-5 shrink-0 font-mono text-[0.52rem] text-[var(--color-ink)]/30">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block text-[0.9rem] font-bold leading-snug transition-colors group-hover:text-[var(--color-hero)]">
-                      {it.cn}
-                    </span>
-                    <span class="block truncate font-mono text-[0.6rem] tracking-[0.04em] text-[var(--color-ink-soft)]/70">
-                      {it.en}
-                    </span>
-                  </span>
-                  {it.note && (
-                    <span class="shrink-0 border border-[var(--color-ink)]/45 bg-[var(--color-paper-lo)] px-1 py-0.5 font-mono text-[0.5rem]">
-                      {it.note}
-                    </span>
-                  )}
-                  <span class="w-14 shrink-0 text-right font-mono text-[0.55rem] tracking-[0.06em] text-[var(--color-ink)]/40">
-                    {it.kind === "剧集"
-                      ? `${it.seasons} 季`
-                      : it.out
-                        ? "已公映"
-                        : "未公映"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
-      }
+  <section class="mt-10 border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-lo)] p-5">
+    <span class="caption">制图说明 / LEGEND</span>
+    <p class="mt-3 max-w-3xl text-[0.82rem] leading-relaxed text-[var(--color-ink-soft)]">
+      四套地图不是同一张图换配色，是四种制图传统：主宇宙用战术网格（军事 HUD），MCU 用轨道视角（因为天剑局在天上），
+      838 用蓝图（一个连信仰都要排版的宇宙），10005 用手绘地图（印刷年代感，边角会卷）。
+      切换上方标签即可换图。
+    </p>
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a href="/blog/mcu-timeline" class="btn-616 btn-ghost text-sm">MCU 时间线 →</a>
+      <a href="/blog/mcu-roster" class="btn-616 btn-ghost text-sm">英雄名册 →</a>
     </div>
   </section>
 </Base>
+
+<style>
+  .mv-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mv-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-bottom: 3px solid var(--color-ink);
+    padding-bottom: 0.75rem;
+  }
+
+  .mv-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    border: 3px solid var(--color-ink);
+    background: var(--color-paper-hi);
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+    transition:
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .mv-tab:hover {
+    transform: translateY(-2px);
+    background: var(--color-reactor);
+  }
+
+  .mv-tab-code {
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.65;
+  }
+
+  .mv-tab-name {
+    font-weight: 800;
+    font-size: 0.8rem;
+    line-height: 1.1;
+  }
+
+  .mv-panel {
+    display: none;
+    padding-top: 1rem;
+  }
+
+  #mv-u616:checked ~ .mv-tabs #tab-u616,
+  #mv-u199999:checked ~ .mv-tabs #tab-u199999,
+  #mv-u838:checked ~ .mv-tabs #tab-u838,
+  #mv-u10005:checked ~ .mv-tabs #tab-u10005 {
+    background: var(--color-ink);
+    color: var(--color-paper-hi);
+    box-shadow: 4px 4px 0 0 var(--color-ink);
+    transform: translateY(-2px);
+  }
+
+  #mv-u616:focus-visible ~ .mv-tabs #tab-u616,
+  #mv-u199999:focus-visible ~ .mv-tabs #tab-u199999,
+  #mv-u838:focus-visible ~ .mv-tabs #tab-u838,
+  #mv-u10005:focus-visible ~ .mv-tabs #tab-u10005 {
+    outline: 3px solid var(--color-hero);
+    outline-offset: 2px;
+  }
+
+  #mv-u616:checked ~ .mv-panels .mv-panel[data-u="u616"],
+  #mv-u199999:checked ~ .mv-panels .mv-panel[data-u="u199999"],
+  #mv-u838:checked ~ .mv-panels .mv-panel[data-u="u838"],
+  #mv-u10005:checked ~ .mv-panels .mv-panel[data-u="u10005"] {
+    display: block;
+  }
+
+  /* ---------------- 地图容器 ---------------- */
+
+  .map {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 3px solid var(--color-ink);
+    box-shadow: 7px 7px 0 0 var(--color-ink);
+    --pin-fg: #06121a;
+    --pin-bg: #7df1ff;
+  }
+
+  .map-meta,
+  .map-scale {
+    position: absolute;
+    z-index: 3;
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.14em;
+    opacity: 0.6;
+  }
+
+  .map-meta {
+    left: 0.7rem;
+    bottom: 0.6rem;
+  }
+
+  .map-scale {
+    right: 0.7rem;
+    bottom: 0.6rem;
+    display: flex;
+    gap: 2px;
+  }
+
+  .map-scale i {
+    display: block;
+    width: 3px;
+    height: 8px;
+    background: currentColor;
+    box-shadow:
+      8px 0 0 currentColor,
+      16px 0 0 currentColor,
+      28px 0 0 currentColor,
+      40px 0 0 currentColor;
+  }
+
+  /* ---------------- 主题 1：战术网格（616） ---------------- */
+
+  .map--tactical {
+    color: #79e6ff;
+    background:
+      radial-gradient(120% 90% at 28% 18%, #16324a 0%, #0a1624 58%, #050a11 100%);
+  }
+
+  .map--tactical::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(35, 224, 255, 0.13) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(35, 224, 255, 0.13) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(circle at 45% 45%, #000 0 65%, transparent 92%);
+  }
+
+  .map--tactical::after {
+    content: "";
+    position: absolute;
+    left: 10%;
+    top: 13%;
+    width: 63%;
+    height: 68%;
+    border: 1px solid rgba(35, 224, 255, 0.28);
+    border-radius: 48% 52% 58% 42% / 56% 44% 56% 44%;
+    background:
+      radial-gradient(closest-side, rgba(35, 224, 255, 0.1), transparent 80%),
+      radial-gradient(
+        60px 42px at 88% 46%,
+        rgba(35, 224, 255, 0.16),
+        transparent 70%
+      );
+    box-shadow:
+      inset 0 0 60px rgba(35, 224, 255, 0.09),
+      0 0 40px rgba(35, 224, 255, 0.05);
+  }
+
+  /* ---------------- 主题 2：轨道视角（199999） ---------------- */
+
+  .map--orbital {
+    color: #b9d8ff;
+    background: radial-gradient(70% 70% at 50% 118%, #24508f 0%, #0c1c34 42%, #04070e 100%);
+    --pin-fg: #04101f;
+    --pin-bg: #b9d8ff;
+  }
+
+  .map--orbital::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background:
+      repeating-radial-gradient(
+        circle at 50% 118%,
+        transparent 0 62px,
+        rgba(127, 178, 255, 0.16) 62px 63px
+      );
+    mask-image: radial-gradient(circle at 50% 118%, #000 0 78%, transparent 96%);
+  }
+
+  .map--orbital::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1.4px 1.4px at 18% 22%, rgba(255, 255, 255, 0.85), transparent),
+      radial-gradient(1.1px 1.1px at 72% 16%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1.6px 1.6px at 84% 38%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 34% 12%, rgba(255, 255, 255, 0.55), transparent),
+      radial-gradient(1.2px 1.2px at 58% 8%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 12% 62%, rgba(255, 255, 255, 0.45), transparent),
+      radial-gradient(1.3px 1.3px at 90% 74%, rgba(255, 255, 255, 0.4), transparent);
+  }
+
+  /* ---------------- 主题 3：蓝图（838） ---------------- */
+
+  .map--blueprint {
+    color: #2b4a78;
+    background: #f3eee2;
+    background-image:
+      linear-gradient(rgba(43, 74, 120, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(43, 74, 120, 0.1) 1px, transparent 1px);
+    background-size: 26px 26px;
+    --pin-fg: #f3eee2;
+    --pin-bg: #8b6b2e;
+  }
+
+  .map--blueprint::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(139, 107, 46, 0.95) 0 3px, transparent 4px),
+      radial-gradient(
+        circle at 50% 50%,
+        transparent 0 116px,
+        rgba(139, 107, 46, 0.55) 116px 117px,
+        transparent 118px
+      ),
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        transparent 0 44px,
+        rgba(43, 74, 120, 0.15) 44px 45px
+      );
+    mask-image: radial-gradient(circle at 50% 50%, #000 0 62%, transparent 86%);
+  }
+
+  .map--blueprint::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(43, 74, 120, 0.22) 0deg 0.4deg,
+      transparent 0.4deg 15deg
+    );
+    mask-image: radial-gradient(circle at 50% 50%, transparent 0 20%, #000 20.5% 21.5%, transparent 22%);
+  }
+
+  /* ---------------- 主题 4：手绘地图（10005） ---------------- */
+
+  .map--atlas {
+    color: #7a2a1e;
+    background: #eddcbb;
+    background-image:
+      repeating-radial-gradient(
+        circle at 26% 34%,
+        transparent 0 20px,
+        rgba(122, 42, 30, 0.09) 20px 21px
+      ),
+      repeating-radial-gradient(
+        circle at 78% 72%,
+        transparent 0 27px,
+        rgba(122, 42, 30, 0.08) 27px 28px
+      ),
+      repeating-linear-gradient(
+        100deg,
+        rgba(122, 42, 30, 0.04) 0 2px,
+        transparent 2px 9px
+      );
+    --pin-fg: #f6ecd8;
+    --pin-bg: #a8261a;
+  }
+
+  .map--atlas::before {
+    content: "";
+    position: absolute;
+    inset: 5%;
+    border: 1px solid rgba(122, 42, 30, 0.35);
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 5px rgba(122, 42, 30, 0.05);
+  }
+
+  .map--atlas::after {
+    content: "";
+    position: absolute;
+    right: 6%;
+    top: 8%;
+    width: 74px;
+    height: 74px;
+    border-radius: 999px;
+    background: repeating-conic-gradient(
+      from 0deg,
+      rgba(122, 42, 30, 0.5) 0deg 1deg,
+      transparent 1deg 30deg
+    );
+    mask-image: radial-gradient(circle, #000 0 68%, transparent 70%);
+  }
+
+  /* ---------------- 图钉 ---------------- */
+
+  .pin {
+    position: absolute;
+    z-index: 4;
+    translate: -50% -50%;
+  }
+
+  .pin-dot {
+    display: block;
+    width: 11px;
+    height: 11px;
+    rotate: 45deg;
+    border: 2px solid currentColor;
+    background: var(--pin-bg);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--pin-bg) 22%, transparent);
+    animation: pin-pulse 3.2s ease-in-out infinite;
+  }
+
+  .pin-label {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    white-space: nowrap;
+    padding: 1px 5px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--pin-fg);
+    background: var(--pin-bg);
+    border: 1.5px solid var(--color-ink);
+  }
+
+  .pin-label b {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    opacity: 0.75;
+  }
+
+  .pin[data-side="right"] .pin-label {
+    left: 14px;
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  .pin[data-side="left"] .pin-label {
+    right: 14px;
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  .pin[data-side="top"] .pin-label {
+    bottom: 14px;
+    left: 50%;
+    translate: -50% 0;
+  }
+
+  .pin[data-side="bottom"] .pin-label {
+    top: 14px;
+    left: 50%;
+    translate: -50% 0;
+  }
+
+  .pin:hover .pin-dot {
+    scale: 1.35;
+  }
+
+  @keyframes pin-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--pin-bg) 20%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 7px color-mix(in srgb, var(--pin-bg) 4%, transparent);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .map {
+      aspect-ratio: 4 / 5;
+    }
+
+    .pin-label {
+      display: none;
+    }
+
+    .pin-dot::after {
+      content: attr(data-i);
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 7px;
+      font-weight: 700;
+      color: var(--pin-fg);
+      rotate: -45deg;
+    }
+
+    .pin-dot {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pin-dot {
+      animation: none;
+    }
+  }
+</style>

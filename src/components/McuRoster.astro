@@ -1,0 +1,104 @@
+---
+import { heroes } from "../data/mcu";
+import { legacyGroups, legacyTotal, legacyFilms, legacySeries } from "../data/legacy";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+---
+
+<div class="mt-2">
+  <!-- 英雄名册 -->
+  <div class="mb-3 flex items-center gap-3">
+    <h3 class="display text-2xl">一、英雄名册</h3>
+    <div class="rule-heavy flex-1"></div>
+    <span class="label text-[var(--color-ink-soft)]">ROSTER / {pad(heroes.length)}</span>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2">
+    {
+      heroes.map((h) => (
+        <div class="border-[3px] border-[var(--color-ink)] bg-[var(--color-paper-hi)] shadow-[4px_4px_0_0_var(--color-ink)]">
+          <div class="h-1.5" style={`background:${h.accent}`} aria-hidden="true" />
+          <div class="flex items-start gap-2.5 p-3">
+            <div
+              class="grid h-10 w-10 shrink-0 place-items-center border-2 border-[var(--color-ink)]"
+              style={`background:${h.accent}`}
+              aria-hidden="true"
+            >
+              <span class="display text-lg text-[var(--color-paper-hi)]">{h.en.charAt(0)}</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline gap-2">
+                <span class="text-[0.85rem] font-extrabold leading-tight">{h.cn}</span>
+                <span class="shrink-0 font-mono text-[0.48rem] text-[var(--color-ink-soft)]">
+                  {h.status}
+                </span>
+              </div>
+              <p class="mt-0.5 truncate font-mono text-[0.56rem] text-[var(--color-ink-soft)]">
+                {h.alias}
+              </p>
+              <p class="mt-1 truncate font-mono text-[0.5rem] text-[var(--color-ink)]/40">
+                {h.debut} · {h.team}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- 别册 -->
+  <div class="mt-9 mb-3 flex items-center gap-3">
+    <h3 class="display text-2xl">二、非 MCU 别册</h3>
+    <div class="rule-heavy flex-1"></div>
+    <span class="label text-[var(--color-ink-soft)]">ELSEWHERE / {legacyTotal}</span>
+  </div>
+
+  <p class="mb-4 text-[0.78rem] leading-relaxed text-[var(--color-ink-soft)]">
+    这些作品不在 199999 里：有的属于福克斯、索尼各自的宇宙，有的出自漫威电视的旧年。共 {legacyTotal} 部（电影 {legacyFilms}、剧集 {legacySeries}）。
+  </p>
+
+  <div class="space-y-7">
+    {
+      legacyGroups.map((g) => (
+        <div>
+          <div class="mb-1.5 flex flex-wrap items-center gap-2">
+            <span
+              class="h-2.5 w-2.5 shrink-0 rotate-45 border border-[var(--color-ink)]"
+              style={`background:${g.accent}`}
+              aria-hidden="true"
+            />
+            <span class="text-[0.86rem] font-extrabold">{g.label}</span>
+            <span class="font-mono text-[0.56rem] text-[var(--color-ink-soft)]">
+              {g.items.length}
+            </span>
+          </div>
+          <p class="mb-1.5 text-[0.68rem] text-[var(--color-ink-soft)]/80">{g.note}</p>
+
+          {g.items.map((it) => (
+            <div class="group flex items-center gap-3 border-b border-dashed border-[var(--color-ink)]/25 py-[5px] hover:border-[var(--color-ink)]">
+              <span class="w-10 shrink-0 font-mono text-[0.6rem] text-[var(--color-ink-soft)]">
+                {it.year}
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="text-[0.82rem] font-bold group-hover:text-[var(--color-hero)]">
+                  {it.cn}
+                </span>
+                <span class="ml-2 font-mono text-[0.54rem] text-[var(--color-ink-soft)]/70">
+                  {it.en}
+                </span>
+              </span>
+              {it.note && (
+                <span class="shrink-0 border border-[var(--color-ink)]/40 px-1 font-mono text-[0.46rem]">
+                  {it.note}
+                </span>
+              )}
+              <span class="w-10 shrink-0 text-right font-mono text-[0.5rem] text-[var(--color-ink)]/40">
+                {it.kind === "剧集" ? `${it.seasons}季` : it.out ? "已公映" : "未公映"}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
